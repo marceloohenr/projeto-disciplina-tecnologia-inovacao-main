@@ -1,0 +1,2167 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mapscife - Plataforma de Graffiti Recife</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    :root {
+      --ink: #f8f4e8;
+      --muted: #bcb6aa;
+      --subtle: #827b70;
+      --night: #090b10;
+      --panel: rgba(16, 18, 25, .78);
+      --panel-strong: rgba(18, 20, 29, .95);
+      --line: rgba(255, 255, 255, .13);
+      --line-strong: rgba(255, 255, 255, .24);
+      --orange: #ff5a36;
+      --cyan: #22e2c8;
+      --yellow: #ffd166;
+      --pink: #ff4fa3;
+      --green: #7be58e;
+      --danger: #ff6b7d;
+      --shadow: 0 28px 80px rgba(0, 0, 0, .45);
+      --radius-xl: 28px;
+      --radius-lg: 20px;
+      --radius-md: 14px;
+      color-scheme: dark;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { min-height: 100%; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        linear-gradient(135deg, rgba(255, 90, 54, .12), transparent 28%),
+        radial-gradient(circle at 76% 12%, rgba(34, 226, 200, .16), transparent 25%),
+        radial-gradient(circle at 28% 92%, rgba(255, 79, 163, .12), transparent 31%),
+        #090b10;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: .1;
+      z-index: 0;
+      background-image:
+        linear-gradient(90deg, rgba(255,255,255,.09) 1px, transparent 1px),
+        linear-gradient(rgba(255,255,255,.09) 1px, transparent 1px);
+      background-size: 42px 42px;
+      mask-image: linear-gradient(to bottom, black, transparent 76%);
+    }
+
+    button, input, select, textarea { font: inherit; }
+    button { color: inherit; }
+    img { max-width: 100%; display: block; }
+
+    .hidden { display: none !important; }
+    .screen {
+      position: relative;
+      z-index: 1;
+      min-height: 100vh;
+      animation: fadeIn .28s ease both;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .glass {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(22px);
+    }
+
+    .login-screen {
+      display: grid;
+      place-items: center;
+      padding: 28px;
+    }
+
+    .login-card {
+      width: min(1080px, 100%);
+      min-height: 660px;
+      display: grid;
+      grid-template-columns: minmax(0, 1.05fr) 430px;
+      overflow: hidden;
+      border-radius: 32px;
+    }
+
+    .login-art {
+      position: relative;
+      padding: 34px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      background:
+        linear-gradient(130deg, rgba(255, 90, 54, .88), rgba(17, 18, 28, .25) 48%, rgba(34, 226, 200, .62)),
+        url("https://images.unsplash.com/photo-1574187684323-6beb8c3ba590?auto=format&fit=crop&w=1200&q=80") center/cover;
+      isolation: isolate;
+    }
+
+    .login-art::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(0,0,0,.12), rgba(0,0,0,.64));
+      z-index: -1;
+    }
+
+    .brand-mark {
+      width: 58px;
+      height: 58px;
+      border-radius: 18px;
+      display: grid;
+      place-items: center;
+      color: #12100d;
+      font-weight: 950;
+      background: linear-gradient(135deg, var(--yellow), var(--cyan));
+      box-shadow: 0 0 34px rgba(34, 226, 200, .34);
+    }
+
+    .login-art h1 {
+      max-width: 640px;
+      margin: 0 0 14px;
+      font-size: clamp(42px, 6vw, 76px);
+      line-height: .9;
+      letter-spacing: 0;
+    }
+
+    .login-art p {
+      max-width: 560px;
+      margin: 0;
+      color: rgba(248,244,232,.86);
+      font-size: 16px;
+      line-height: 1.55;
+    }
+
+    .login-form {
+      padding: 34px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 18px;
+      background: rgba(10, 12, 17, .78);
+    }
+
+    .eyebrow {
+      color: var(--yellow);
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: .11em;
+      text-transform: uppercase;
+    }
+
+    .login-form h2,
+    .panel-title {
+      margin: 0;
+      font-size: 28px;
+      line-height: 1.05;
+      letter-spacing: 0;
+    }
+
+    .helper {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.5;
+      font-size: 14px;
+    }
+
+    .field {
+      display: grid;
+      gap: 8px;
+    }
+
+    label {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .input, .select, textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      min-height: 46px;
+      padding: 0 13px;
+      outline: none;
+      color: var(--ink);
+      background: rgba(255, 255, 255, .07);
+      transition: border-color .18s ease, box-shadow .18s ease, background .18s ease;
+    }
+
+    textarea {
+      min-height: 102px;
+      padding: 12px 13px;
+      resize: vertical;
+    }
+
+    .select option { color: #101114; }
+    .input:focus, .select:focus, textarea:focus {
+      border-color: rgba(34, 226, 200, .82);
+      box-shadow: 0 0 0 4px rgba(34, 226, 200, .13);
+      background: rgba(255, 255, 255, .09);
+    }
+
+    .primary-btn, .secondary-btn, .ghost-btn, .danger-btn {
+      border: 0;
+      border-radius: var(--radius-md);
+      min-height: 46px;
+      padding: 0 16px;
+      cursor: pointer;
+      font-weight: 900;
+      transition: transform .16s ease, border-color .16s ease, box-shadow .16s ease, background .16s ease;
+    }
+
+    .primary-btn {
+      color: #17120d;
+      background: linear-gradient(135deg, var(--yellow), #ff7d42 58%, var(--pink));
+      box-shadow: 0 18px 34px rgba(255, 90, 54, .25);
+    }
+
+    .secondary-btn {
+      color: var(--ink);
+      background: rgba(255, 255, 255, .08);
+      border: 1px solid var(--line);
+    }
+
+    .ghost-btn {
+      min-height: 38px;
+      color: var(--muted);
+      background: rgba(255, 255, 255, .05);
+      border: 1px solid var(--line);
+    }
+
+    .danger-btn {
+      color: #19090d;
+      background: linear-gradient(135deg, var(--danger), #ff9a6b);
+    }
+
+    .primary-btn:hover, .secondary-btn:hover, .ghost-btn:hover, .danger-btn:hover {
+      transform: translateY(-1px);
+      border-color: var(--line-strong);
+    }
+
+    .demo-users {
+      display: grid;
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    .demo-chip {
+      min-height: 42px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      color: var(--muted);
+      background: rgba(255, 255, 255, .045);
+      cursor: pointer;
+      text-align: left;
+      padding: 0 12px;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .error {
+      min-height: 20px;
+      color: #ff99a7;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .workspace {
+      height: 100vh;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+      overflow: hidden;
+    }
+
+    .app-header {
+      height: 74px;
+      padding: 12px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(8, 10, 15, .78);
+      backdrop-filter: blur(18px);
+      z-index: 800;
+    }
+
+    .header-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .header-brand .brand-mark {
+      width: 44px;
+      height: 44px;
+      border-radius: 15px;
+      flex: 0 0 auto;
+    }
+
+    .header-brand h1 {
+      margin: 0;
+      font-size: 18px;
+      letter-spacing: 0;
+    }
+
+    .header-brand span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .role-pill {
+      border: 1px solid rgba(34,226,200,.24);
+      background: rgba(34,226,200,.1);
+      color: #cffff8;
+      border-radius: 999px;
+      padding: 9px 12px;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .role-pill.visitor {
+      border-color: rgba(255,209,102,.26);
+      background: rgba(255,209,102,.1);
+      color: #fff0b8;
+    }
+
+    .artist-avatar-btn {
+      width: 44px;
+      height: 44px;
+      border: 1px solid rgba(34,226,200,.28);
+      border-radius: 50%;
+      padding: 0;
+      cursor: pointer;
+      overflow: hidden;
+      display: grid;
+      place-items: center;
+      color: #15110c;
+      font-weight: 950;
+      background: linear-gradient(135deg, var(--cyan), var(--yellow));
+      box-shadow: 0 0 26px rgba(34,226,200,.2);
+      flex: 0 0 auto;
+    }
+
+    .artist-avatar-btn img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .client-layout {
+      min-height: 0;
+      display: grid;
+      grid-template-columns: 330px minmax(0, 1fr) 390px;
+      gap: 14px;
+      padding: 14px;
+    }
+
+    .side-panel, .detail-panel, .artist-form-panel, .artist-list-panel, .profile-form-panel {
+      min-height: 0;
+      border-radius: var(--radius-xl);
+      overflow: hidden;
+    }
+
+    .side-panel {
+      display: grid;
+      grid-template-rows: auto auto minmax(0, 1fr);
+    }
+
+    .panel-head {
+      padding: 20px;
+      border-bottom: 1px solid var(--line);
+      background: linear-gradient(135deg, rgba(255,90,54,.14), rgba(34,226,200,.05));
+    }
+
+    .panel-head h2 { margin: 8px 0 7px; font-size: 24px; line-height: 1; }
+    .filters {
+      padding: 14px;
+      display: grid;
+      gap: 11px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .filter-row, .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .stat-card {
+      min-height: 66px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 10px;
+      background: rgba(255,255,255,.045);
+    }
+
+    .stat-card b { display: block; font-size: 22px; line-height: 1; }
+    .stat-card span { display: block; color: var(--muted); font-size: 11px; margin-top: 5px; }
+
+    .art-list {
+      min-height: 0;
+      overflow: auto;
+      padding: 12px;
+      display: grid;
+      align-content: start;
+      gap: 10px;
+    }
+
+    .art-card {
+      display: grid;
+      grid-template-columns: 74px minmax(0, 1fr);
+      gap: 11px;
+      padding: 9px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      background: rgba(255,255,255,.052);
+      cursor: pointer;
+      transition: transform .16s ease, border-color .16s ease, background .16s ease;
+    }
+
+    .art-card:hover, .art-card.active {
+      transform: translateY(-2px);
+      border-color: rgba(255, 209, 102, .58);
+      background: rgba(255, 209, 102, .08);
+    }
+
+    .art-thumb, .detail-photo, .manage-photo, .profile-photo, .profile-modal-photo {
+      position: relative;
+      overflow: hidden;
+      border-radius: 16px;
+      min-height: 74px;
+      border: 1px solid rgba(255,255,255,.16);
+      background:
+        linear-gradient(135deg, rgba(255,90,54,.8), rgba(255,79,163,.52) 42%, rgba(34,226,200,.72)),
+        #191b24;
+    }
+
+    .art-thumb img, .detail-photo img, .manage-photo img, .profile-photo img, .profile-modal-photo img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      position: absolute;
+      inset: 0;
+    }
+
+    .art-thumb::before, .detail-photo::before, .manage-photo::before, .profile-photo::before, .profile-modal-photo::before {
+      content: "";
+      position: absolute;
+      inset: -28%;
+      background:
+        repeating-linear-gradient(125deg, rgba(255,255,255,.22) 0 8px, transparent 8px 17px),
+        radial-gradient(circle at 34% 42%, rgba(255,255,255,.32), transparent 13%);
+      mix-blend-mode: screen;
+      transform: rotate(-9deg);
+    }
+
+    .art-thumb:has(img)::before, .detail-photo:has(img)::before, .manage-photo:has(img)::before,
+    .profile-photo:has(img)::before, .profile-modal-photo:has(img)::before { display: none; }
+
+    .art-copy h3 {
+      margin: 2px 0 5px;
+      font-size: 14px;
+      line-height: 1.18;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .art-copy p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.34;
+    }
+
+    .tags, .contact-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .tag, .contact-chip {
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
+      border-radius: 999px;
+      padding: 0 8px;
+      color: rgba(248,244,232,.9);
+      background: rgba(255,255,255,.075);
+      border: 1px solid rgba(255,255,255,.13);
+      font-size: 10px;
+      font-weight: 900;
+    }
+
+    .contact-chip {
+      min-height: 32px;
+      font-size: 12px;
+      color: #d9fff8;
+      border-color: rgba(34,226,200,.22);
+      background: rgba(34,226,200,.08);
+    }
+
+    .map-wrap {
+      position: relative;
+      min-width: 0;
+      min-height: 0;
+      border-radius: var(--radius-xl);
+      overflow: hidden;
+    }
+
+    #clientMap, #artistMap {
+      height: 100%;
+      min-height: 420px;
+      background: #10131a;
+      z-index: 1;
+    }
+
+    .map-overlay, .artist-map-help {
+      position: absolute;
+      left: 18px;
+      top: 18px;
+      z-index: 500;
+      width: min(390px, calc(100% - 36px));
+      border-radius: 20px;
+      padding: 14px;
+      background: rgba(9, 11, 16, .66);
+      border: 1px solid var(--line);
+      backdrop-filter: blur(18px);
+      pointer-events: none;
+    }
+
+    .map-overlay strong, .artist-map-help strong { display: block; font-size: 15px; }
+    .map-overlay span, .artist-map-help span { display: block; color: var(--muted); font-size: 12px; line-height: 1.45; margin-top: 5px; }
+
+    .leaflet-control-zoom a {
+      background: rgba(13,15,21,.9) !important;
+      color: var(--ink) !important;
+      border-color: var(--line) !important;
+    }
+
+    .leaflet-popup-content-wrapper, .leaflet-popup-tip {
+      color: var(--ink);
+      background: rgba(16,18,25,.95);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+    }
+
+    .mural-marker {
+      width: 36px;
+      height: 36px;
+      border-radius: 50% 50% 50% 8px;
+      transform: rotate(-45deg);
+      background: linear-gradient(135deg, var(--yellow), var(--orange) 55%, var(--pink));
+      border: 2px solid rgba(255,255,255,.88);
+      box-shadow: 0 0 0 8px rgba(255,90,54,.16), 0 16px 34px rgba(0,0,0,.4);
+    }
+
+    .mural-marker.available {
+      background: linear-gradient(135deg, var(--cyan), var(--green));
+      box-shadow: 0 0 0 8px rgba(34,226,200,.14), 0 16px 34px rgba(0,0,0,.4);
+    }
+
+    .mural-marker.selected {
+      box-shadow: 0 0 0 11px rgba(255,209,102,.22), 0 20px 40px rgba(0,0,0,.48);
+    }
+
+    .mural-marker::after {
+      content: "";
+      position: absolute;
+      width: 12px;
+      height: 12px;
+      left: 10px;
+      top: 10px;
+      border-radius: 50%;
+      background: #fff;
+    }
+
+    .detail-panel {
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+    }
+
+    .detail-hero {
+      padding: 15px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .detail-photo {
+      min-height: 220px;
+      margin-bottom: 15px;
+    }
+
+    .detail-hero h2 {
+      margin: 0 0 6px;
+      font-size: 28px;
+      line-height: 1;
+      letter-spacing: 0;
+    }
+
+    .detail-hero p, .detail-body p {
+      color: var(--muted);
+      line-height: 1.5;
+      font-size: 13px;
+    }
+
+    .artist-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 13px;
+    }
+
+    .avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 15px;
+      display: grid;
+      place-items: center;
+      color: #111;
+      font-weight: 950;
+      background: linear-gradient(135deg, var(--cyan), var(--yellow));
+      flex: 0 0 auto;
+      overflow: hidden;
+    }
+
+    .avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .artist-row strong { display: block; font-size: 14px; }
+    .artist-row span { display: block; color: var(--muted); font-size: 12px; margin-top: 2px; }
+
+    .detail-body {
+      min-height: 0;
+      overflow: auto;
+      padding: 15px;
+      display: grid;
+      align-content: start;
+      gap: 12px;
+    }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .info-box, .story-card {
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      background: rgba(255,255,255,.047);
+      padding: 13px;
+    }
+
+    .info-box span {
+      display: block;
+      color: var(--subtle);
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      font-size: 10px;
+      font-weight: 900;
+      margin-bottom: 5px;
+    }
+
+    .info-box b {
+      display: block;
+      font-size: 14px;
+      line-height: 1.25;
+    }
+
+    .story-card h3 {
+      margin: 0 0 8px;
+      font-size: 15px;
+    }
+
+    .button-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .empty-state {
+      padding: 18px;
+      border: 1px dashed rgba(255,255,255,.22);
+      border-radius: var(--radius-lg);
+      color: var(--muted);
+      background: rgba(255,255,255,.035);
+      line-height: 1.5;
+      font-size: 13px;
+    }
+
+    .artist-layout {
+      min-height: 0;
+      display: grid;
+      grid-template-columns: 360px minmax(0, 1fr) 340px;
+      grid-template-rows: minmax(0, 1fr);
+      gap: 14px;
+      padding: 14px;
+    }
+
+    .profile-form-panel, .artist-form-panel {
+      overflow: auto;
+    }
+
+    .artist-workspace {
+      display: grid;
+      grid-template-rows: auto minmax(320px, 1fr);
+      gap: 14px;
+      min-height: 0;
+    }
+
+    .artist-form, .profile-form {
+      padding: 16px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .upload-box {
+      position: relative;
+      min-height: 166px;
+      border-radius: var(--radius-lg);
+      border: 1px dashed rgba(255,255,255,.24);
+      overflow: hidden;
+      display: grid;
+      place-items: center;
+      background:
+        linear-gradient(135deg, rgba(255,90,54,.14), rgba(34,226,200,.08)),
+        rgba(255,255,255,.04);
+      cursor: pointer;
+    }
+
+    .upload-box input {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+    }
+
+    .upload-box img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .upload-copy {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      color: var(--muted);
+      padding: 16px;
+    }
+
+    .upload-copy strong { display: block; color: var(--ink); margin-bottom: 6px; }
+
+    .artist-form .upload-box {
+      min-height: 128px;
+    }
+
+    .profile-form .upload-box {
+      min-height: 180px;
+    }
+
+    .artist-map-card {
+      position: relative;
+      border-radius: var(--radius-xl);
+      overflow: hidden;
+      min-height: 0;
+    }
+
+    .artist-list-panel {
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+    }
+
+    .manage-list {
+      min-height: 0;
+      overflow: auto;
+      padding: 12px;
+      display: grid;
+      align-content: start;
+      gap: 10px;
+    }
+
+    .manage-card {
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      padding: 10px;
+      background: rgba(255,255,255,.047);
+    }
+
+    .manage-photo {
+      min-height: 142px;
+      margin-bottom: 10px;
+    }
+
+    .manage-card h3 { margin: 0 0 5px; font-size: 15px; }
+    .manage-card p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.45; }
+
+    .manage-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 1400;
+      display: none;
+      place-items: center;
+      padding: 18px;
+      background: rgba(0,0,0,.66);
+      backdrop-filter: blur(14px);
+    }
+
+    .modal-backdrop.open { display: grid; }
+
+    .modal {
+      width: min(760px, 100%);
+      max-height: min(860px, calc(100vh - 36px));
+      overflow: auto;
+      border-radius: 28px;
+      background: var(--panel-strong);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+    }
+
+    .modal.small { width: min(520px, 100%); }
+
+    .modal-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 20px;
+      border-bottom: 1px solid var(--line);
+      background: linear-gradient(135deg, rgba(255,90,54,.14), rgba(34,226,200,.08));
+    }
+
+    .modal-header h2 {
+      margin: 5px 0 0;
+      font-size: 28px;
+      line-height: 1;
+    }
+
+    .close-btn {
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.08);
+      color: var(--ink);
+      cursor: pointer;
+      font-weight: 900;
+      flex: 0 0 auto;
+    }
+
+    .modal-body {
+      padding: 18px;
+      display: grid;
+      gap: 14px;
+    }
+
+    .profile-modal-grid {
+      display: grid;
+      grid-template-columns: 190px minmax(0, 1fr);
+      gap: 16px;
+      align-items: start;
+    }
+
+    .profile-modal-photo {
+      min-height: 210px;
+    }
+
+    .modal-art-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .modal-art-card {
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 9px;
+      background: rgba(255,255,255,.045);
+    }
+
+    .modal-art-card .art-thumb {
+      min-height: 92px;
+      margin-bottom: 8px;
+    }
+
+    .modal-art-card strong {
+      display: block;
+      font-size: 12px;
+      line-height: 1.2;
+    }
+
+    .modal-actions {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 24px;
+      transform: translateX(-50%) translateY(18px);
+      opacity: 0;
+      pointer-events: none;
+      z-index: 1600;
+      color: #12100d;
+      font-weight: 900;
+      background: var(--ink);
+      border-radius: 999px;
+      padding: 12px 16px;
+      box-shadow: var(--shadow);
+      transition: .22s ease;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    @media (max-width: 1260px) {
+      .client-layout { grid-template-columns: 310px minmax(0, 1fr); }
+      .detail-panel { grid-column: 1 / -1; grid-template-columns: 360px minmax(0, 1fr); grid-template-rows: auto; }
+      .detail-hero { border-bottom: 0; border-right: 1px solid var(--line); }
+      .artist-layout { grid-template-columns: 340px minmax(0, 1fr); }
+      .artist-list-panel { grid-column: 1 / -1; }
+      .manage-list { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 900px) {
+      .workspace { height: auto; min-height: 100vh; overflow: visible; }
+      .app-header { height: auto; align-items: flex-start; }
+      .client-layout, .artist-layout { grid-template-columns: 1fr; }
+      .side-panel, .detail-panel, .artist-form-panel, .artist-list-panel, .profile-form-panel { min-height: auto; }
+      .detail-panel { display: block; }
+      .detail-hero { border-right: 0; border-bottom: 1px solid var(--line); }
+      #clientMap, #artistMap { min-height: 560px; }
+      .login-card { grid-template-columns: 1fr; }
+      .login-art { min-height: 420px; }
+      .manage-list { grid-template-columns: 1fr 1fr; }
+      .profile-modal-grid { grid-template-columns: 1fr; }
+      .profile-modal-photo { min-height: 240px; }
+    }
+
+    @media (max-width: 620px) {
+      .login-screen { padding: 12px; }
+      .login-card { min-height: 0; border-radius: 24px; }
+      .login-art, .login-form { padding: 22px; }
+      .app-header { padding: 10px; }
+      .header-actions { width: 100%; justify-content: stretch; }
+      .header-actions > * { flex: 1 1 auto; text-align: center; }
+      .header-actions .artist-avatar-btn { flex: 0 0 44px; }
+      .client-layout, .artist-layout { padding: 10px; gap: 10px; }
+      .filter-row, .stats, .info-grid, .button-row, .form-grid, .manage-actions, .manage-list, .modal-actions, .modal-art-grid { grid-template-columns: 1fr; }
+      #clientMap, #artistMap { min-height: 520px; }
+      .map-overlay, .artist-map-help { left: 10px; top: 10px; width: calc(100% - 20px); }
+      .panel-head { padding: 16px; }
+      .modal-backdrop { padding: 8px; }
+      .modal { max-height: calc(100vh - 16px); border-radius: 22px; }
+    }
+  </style>
+</head>
+<body>
+  <main id="loginScreen" class="screen login-screen hidden">
+    <section class="login-card glass" aria-label="Login do Mapscife">
+      <div class="login-art">
+        <div class="brand-mark">MS</div>
+        <div>
+          <span class="eyebrow">Recife Antigo como ponto de partida</span>
+          <h1>Mapscife</h1>
+          <p>Mapa vivo para descobrir grafites, valorizar artistas urbanos e transformar muros do Recife em uma galeria cultural interativa.</p>
+        </div>
+      </div>
+
+      <form class="login-form" id="loginForm">
+        <div>
+          <span class="eyebrow">Acesso inteligente</span>
+          <h2>Entre e o sistema identifica seu ambiente</h2>
+          <p class="helper">Use um dos acessos de demonstração. O redirecionamento para cliente ou grafiteiro acontece automaticamente após o login.</p>
+        </div>
+        <div class="field">
+          <label for="email">E-mail</label>
+          <input class="input" id="email" name="email" type="email" autocomplete="username" placeholder="cliente@mapscife.com" required>
+        </div>
+        <div class="field">
+          <label for="password">Senha</label>
+          <input class="input" id="password" name="password" type="password" autocomplete="current-password" placeholder="123456" required>
+        </div>
+        <button class="primary-btn" type="submit">Entrar na plataforma</button>
+        <button class="secondary-btn" id="backToMap" type="button">Continuar explorando sem login</button>
+        <div class="demo-users" aria-label="Credenciais de teste">
+          <button class="demo-chip" type="button" data-email="cliente@mapscife.com">Cliente demo: cliente@mapscife.com / 123456</button>
+          <button class="demo-chip" type="button" data-email="nina@mapscife.com">Grafiteira demo: nina@mapscife.com / 123456</button>
+        </div>
+        <div class="error" id="loginError" role="alert"></div>
+      </form>
+    </section>
+  </main>
+
+  <section id="clientScreen" class="screen workspace">
+    <header class="app-header">
+      <div class="header-brand">
+        <div class="brand-mark">MS</div>
+        <div>
+          <h1>Mapscife Cliente</h1>
+          <span>Mapa interativo, galeria urbana e descoberta cultural em Recife.</span>
+        </div>
+      </div>
+      <div class="header-actions">
+        <span class="role-pill visitor" id="clientUserLabel">Visitante</span>
+        <button class="ghost-btn" id="resetClientMap" type="button">Focar Recife Antigo</button>
+        <button class="primary-btn" id="clientLogin" type="button">Entrar</button>
+        <button class="secondary-btn hidden" id="clientLogout" type="button">Sair</button>
+      </div>
+    </header>
+
+    <div class="client-layout">
+      <aside class="side-panel glass">
+        <section class="panel-head">
+          <span class="eyebrow">Galeria urbana</span>
+          <h2>Explore grafites no Recife Antigo</h2>
+          <p class="helper">Visitantes exploram o mapa e as obras. Clientes logados acessam perfis completos, contatos e contratação.</p>
+          <div class="stats">
+            <div class="stat-card"><b id="statArts">0</b><span>obras</span></div>
+            <div class="stat-card"><b id="statArtists">0</b><span>artistas</span></div>
+            <div class="stat-card"><b id="statHire">0</b><span>contatos</span></div>
+          </div>
+        </section>
+
+        <section class="filters">
+          <div class="field">
+            <label for="searchInput">Busca</label>
+            <input class="input" id="searchInput" placeholder="Ex.: Marco Zero, lettering, Nina">
+          </div>
+          <div class="filter-row">
+            <div class="field">
+              <label for="styleFilter">Estilo</label>
+              <select class="select" id="styleFilter">
+                <option value="all">Todos</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="regionFilter">Região</label>
+              <select class="select" id="regionFilter">
+                <option value="all">Todas</option>
+              </select>
+            </div>
+          </div>
+        </section>
+
+        <section class="art-list" id="artList" aria-label="Obras filtradas"></section>
+      </aside>
+
+      <section class="map-wrap glass">
+        <div class="map-overlay">
+          <strong>Recife Antigo em destaque</strong>
+          <span>O mapa inicia centralizado na área foco do projeto, com pontos próximos ao Marco Zero, Cais do Sertão, Paço do Frevo e entorno portuário.</span>
+        </div>
+        <div id="clientMap" aria-label="Mapa de grafites no Recife"></div>
+      </section>
+
+      <aside class="detail-panel glass" id="detailPanel" aria-live="polite"></aside>
+    </div>
+  </section>
+
+  <section id="artistScreen" class="screen workspace hidden">
+    <header class="app-header">
+      <div class="header-brand">
+        <div class="brand-mark">MS</div>
+        <div>
+          <h1>Mapscife Grafiteiro</h1>
+          <span>Gerencie seu perfil público, contatos e artes no mapa do Recife.</span>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button class="artist-avatar-btn" id="artistProfileAvatar" type="button" title="Editar perfil do grafiteiro">GF</button>
+        <span class="role-pill" id="artistUserLabel">Grafiteiro</span>
+        <button class="ghost-btn" id="centerArtistMap" type="button">Centralizar mapa</button>
+        <button class="secondary-btn" id="artistLogout" type="button">Sair</button>
+      </div>
+    </header>
+
+    <div class="artist-layout">
+      <aside class="artist-form-panel glass">
+        <section class="panel-head">
+          <span class="eyebrow">Cadastro de arte</span>
+          <h2 id="formTitle">Nova obra</h2>
+          <p class="helper">Suba imagem, descreva a obra e clique no mapa para marcar o ponto exato.</p>
+        </section>
+        <form class="artist-form" id="artForm">
+          <input type="hidden" id="editingArtId">
+          <label class="upload-box" for="imageInput">
+            <input id="imageInput" type="file" accept="image/*">
+            <img id="imagePreview" class="hidden" alt="Prévia da arte">
+            <span class="upload-copy">
+              <strong>Enviar imagem da arte</strong>
+              JPG, PNG ou imagem mockada se nenhum arquivo for enviado.
+            </span>
+          </label>
+          <div class="field">
+            <label for="titleInput">Título</label>
+            <input class="input" id="titleInput" placeholder="Ex.: Mangue em Movimento" required>
+          </div>
+          <div class="field">
+            <label for="descriptionInput">Descrição</label>
+            <textarea id="descriptionInput" placeholder="Contexto, inspiração, técnica e mensagem da obra." required></textarea>
+          </div>
+          <div class="form-grid">
+            <div class="field">
+              <label for="styleInput">Estilo</label>
+              <select class="select" id="styleInput" required>
+                <option>Lettering</option>
+                <option>Personagem</option>
+                <option>Mural social</option>
+                <option>Abstrato</option>
+                <option>Manguebeat</option>
+                <option>Stencil</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="regionInput">Região</label>
+              <select class="select" id="regionInput" required>
+                <option>Recife Antigo</option>
+                <option>Centro</option>
+                <option>Santo Amaro</option>
+                <option>Boa Vista</option>
+                <option>Zona Norte</option>
+                <option>Zona Sul</option>
+                <option>Zona Oeste</option>
+              </select>
+            </div>
+          </div>
+          <div class="field">
+            <label for="locationInput">Localização textual</label>
+            <input class="input" id="locationInput" placeholder="Ex.: Rua do Bom Jesus, Recife Antigo" required>
+          </div>
+          <div class="form-grid">
+            <div class="field">
+              <label for="latInput">Latitude</label>
+              <input class="input" id="latInput" readonly required>
+            </div>
+            <div class="field">
+              <label for="lngInput">Longitude</label>
+              <input class="input" id="lngInput" readonly required>
+            </div>
+          </div>
+          <button class="primary-btn" type="submit">Salvar arte no mapa</button>
+          <button class="secondary-btn" id="clearForm" type="button">Limpar formulário</button>
+        </form>
+      </aside>
+
+      <section class="artist-map-card glass">
+        <div class="artist-map-help">
+          <strong>Escolha o ponto exato</strong>
+          <span>Clique no mapa para posicionar a obra. Ao salvar, ela aparece automaticamente como ponto clicável no ambiente do cliente.</span>
+        </div>
+        <div id="artistMap" aria-label="Mapa para cadastro da arte"></div>
+      </section>
+
+      <aside class="artist-list-panel glass">
+        <section class="panel-head">
+          <span class="eyebrow">Meu portfólio</span>
+          <h2>Artes cadastradas</h2>
+          <p class="helper">Edite imagem, dados, localização ou exclua obras mockadas.</p>
+        </section>
+        <section class="manage-list" id="manageList"></section>
+      </aside>
+    </div>
+  </section>
+
+  <div class="modal-backdrop" id="authModal">
+    <section class="modal small" role="dialog" aria-modal="true" aria-labelledby="authModalTitle">
+      <header class="modal-header">
+        <div>
+          <span class="eyebrow">Acesso restrito</span>
+          <h2 id="authModalTitle">Faça login para continuar</h2>
+        </div>
+        <button class="close-btn" type="button" data-close-modal="authModal">x</button>
+      </header>
+      <div class="modal-body">
+        <p class="helper">Você pode explorar o mapa e conhecer as obras sem login. Para ver perfil completo, contatos e conversar com grafiteiros, entre como cliente.</p>
+        <div class="button-row">
+          <button class="primary-btn" id="authLoginBtn" type="button">Fazer login</button>
+          <button class="secondary-btn" type="button" data-close-modal="authModal">Continuar explorando</button>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div class="modal-backdrop" id="profileModal">
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="profileModalTitle">
+      <header class="modal-header">
+        <div>
+          <span class="eyebrow">Perfil do grafiteiro</span>
+          <h2 id="profileModalTitle">Perfil</h2>
+        </div>
+        <button class="close-btn" type="button" data-close-modal="profileModal">x</button>
+      </header>
+      <div class="modal-body" id="profileModalBody"></div>
+    </section>
+  </div>
+
+  <div class="modal-backdrop" id="editProfileModal">
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="editProfileModalTitle">
+      <header class="modal-header">
+        <div>
+          <span class="eyebrow">Editar perfil público</span>
+          <h2 id="editProfileModalTitle">Perfil do grafiteiro</h2>
+        </div>
+        <button class="close-btn" type="button" data-close-modal="editProfileModal">x</button>
+      </header>
+      <form class="modal-body profile-form" id="profileForm">
+        <label class="upload-box" for="profilePhotoInput">
+          <input id="profilePhotoInput" type="file" accept="image/*">
+          <img id="profilePhotoPreview" class="hidden" alt="Foto de perfil">
+          <span class="upload-copy">
+            <strong>Enviar foto de perfil</strong>
+            Use uma foto, avatar ou marca pessoal.
+          </span>
+        </label>
+        <div class="form-grid">
+          <div class="field">
+            <label for="profileNameInput">Nome artístico</label>
+            <input class="input" id="profileNameInput" required>
+          </div>
+          <div class="field">
+            <label for="profileRegionInput">Região principal</label>
+            <input class="input" id="profileRegionInput" placeholder="Recife Antigo, Centro">
+          </div>
+        </div>
+        <div class="field">
+          <label for="profileBioInput">Bio</label>
+          <textarea id="profileBioInput" required></textarea>
+        </div>
+        <div class="field">
+          <label for="profileStylesInput">Estilos</label>
+          <input class="input" id="profileStylesInput" placeholder="Lettering, mural social, stencil" required>
+        </div>
+        <div class="field">
+          <label for="profileInstagramInput">Instagram</label>
+          <input class="input" id="profileInstagramInput" placeholder="@seuperfil">
+        </div>
+        <div class="form-grid">
+          <div class="field">
+            <label for="profileWhatsappInput">WhatsApp</label>
+            <input class="input" id="profileWhatsappInput" placeholder="81 90000-0000">
+          </div>
+          <div class="field">
+            <label for="profileEmailInput">E-mail</label>
+            <input class="input" id="profileEmailInput" type="email" placeholder="contato@email.com">
+          </div>
+        </div>
+        <div class="field">
+          <label for="profileOtherLinksInput">Outras redes</label>
+          <input class="input" id="profileOtherLinksInput" placeholder="Behance, site, TikTok">
+        </div>
+        <div class="button-row">
+          <button class="primary-btn" type="submit">Salvar perfil</button>
+          <button class="secondary-btn" type="button" data-close-modal="editProfileModal">Cancelar</button>
+        </div>
+      </form>
+    </section>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    const RECIFE_ANTIGO_BOUNDS = [[-8.0714, -34.8799], [-8.0476, -34.8621]];
+    const ARTWORKS_KEY = "mapscife_artworks_v2";
+    const PROFILES_KEY = "mapscife_artist_profiles_v1";
+    const SESSION_KEY = "mapscife_session_v2";
+
+    const users = [
+      { id: "client-1", name: "Cliente Demo", email: "cliente@mapscife.com", password: "123456", role: "client" },
+      { id: "artist-1", name: "Nina Mar", email: "nina@mapscife.com", password: "123456", role: "artist" },
+      { id: "artist-2", name: "Breno Spray", email: "breno@mapscife.com", password: "123456", role: "artist" }
+    ];
+
+    const seedProfiles = [
+      {
+        userId: "artist-1",
+        displayName: "Nina Mar",
+        photo: "",
+        bio: "Grafiteira recifense que mistura manguebeat, personagens aquáticos e narrativas de memória urbana. Atua em murais, oficinas e projetos culturais.",
+        styles: ["Mural social", "Personagem", "Stencil"],
+        instagram: "@ninamar.rec",
+        whatsapp: "81 90000-0001",
+        email: "nina@mapscife.com",
+        otherLinks: "Portfólio: mapscife.test/ninamar",
+        cityRegion: "Recife Antigo e Centro"
+      },
+      {
+        userId: "artist-2",
+        displayName: "Breno Spray",
+        photo: "",
+        bio: "Artista urbano especializado em lettering, identidade visual para fachadas e intervenções inspiradas no frevo, maracatu e tipografia popular.",
+        styles: ["Lettering", "Abstrato", "Mural social"],
+        instagram: "@brenospray",
+        whatsapp: "81 90000-0002",
+        email: "breno@mapscife.com",
+        otherLinks: "Behance: /brenospray",
+        cityRegion: "Recife Antigo, Boa Vista e Santo Amaro"
+      }
+    ];
+
+    const seedArtworks = [
+      {
+        id: "art-1",
+        title: "Mangue em Movimento",
+        description: "Mural inspirado nos rios, pontes e na energia manguebeat. A obra mistura fauna local, textura de lambe-lambe e cores de alto impacto.",
+        style: "Mural social",
+        region: "Recife Antigo",
+        location: "Armazém do Porto, Recife Antigo",
+        lat: -8.0634,
+        lng: -34.8711,
+        artistId: "artist-1",
+        image: "",
+        available: true,
+        rating: "4.9",
+        tags: ["manguebeat", "fachada", "cultura"]
+      },
+      {
+        id: "art-2",
+        title: "Letra de Maracatu",
+        description: "Lettering urbano com movimento de alfaia e paleta quente. Uma peça pensada para vitrines, eventos culturais e campanhas locais.",
+        style: "Lettering",
+        region: "Recife Antigo",
+        location: "Rua do Bom Jesus, Recife Antigo",
+        lat: -8.0601,
+        lng: -34.8719,
+        artistId: "artist-2",
+        image: "",
+        available: true,
+        rating: "4.8",
+        tags: ["tipografia", "maracatu", "comercial"]
+      },
+      {
+        id: "art-3",
+        title: "Cais Elétrico",
+        description: "Personagem futurista conectado ao porto, aos rios e à tecnologia. Ideal para mostrar a relação entre arte urbana e inovação.",
+        style: "Personagem",
+        region: "Recife Antigo",
+        location: "Cais do Sertão, Recife Antigo",
+        lat: -8.0618,
+        lng: -34.8686,
+        artistId: "artist-1",
+        image: "",
+        available: true,
+        rating: "4.7",
+        tags: ["personagem", "porto", "tecnologia"]
+      },
+      {
+        id: "art-4",
+        title: "Pontes de Tinta",
+        description: "Composição abstrata sobre pontes, encontros e caminhos culturais. Funciona como ponto de roteiro para caminhadas artísticas.",
+        style: "Abstrato",
+        region: "Centro",
+        location: "Paço do Frevo, Recife",
+        lat: -8.0629,
+        lng: -34.8735,
+        artistId: "artist-2",
+        image: "",
+        available: false,
+        rating: "4.6",
+        tags: ["abstrato", "roteiro", "frevo"]
+      },
+      {
+        id: "art-5",
+        title: "Brum Respira",
+        description: "Stencil em camadas sobre memória, proteção urbana e ocupação cultural no entorno do Forte do Brum.",
+        style: "Stencil",
+        region: "Recife Antigo",
+        location: "Forte do Brum, Recife Antigo",
+        lat: -8.0499,
+        lng: -34.8716,
+        artistId: "artist-1",
+        image: "",
+        available: true,
+        rating: "4.9",
+        tags: ["stencil", "memória", "forte"]
+      }
+    ];
+
+    const state = {
+      user: null,
+      artworks: [],
+      artistProfiles: [],
+      selectedId: null,
+      clientMap: null,
+      artistMap: null,
+      clientMarkers: new Map(),
+      artistMarkers: new Map(),
+      draftMarker: null,
+      uploadedImage: "",
+      uploadedProfilePhoto: ""
+    };
+
+    const $ = id => document.getElementById(id);
+
+    function escapeHtml(value) {
+      return String(value || "").replace(/[&<>"']/g, char => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;"
+      }[char]));
+    }
+
+    function splitList(value) {
+      if (Array.isArray(value)) return value.map(item => String(item).trim()).filter(Boolean);
+      return String(value || "").split(",").map(item => item.trim()).filter(Boolean);
+    }
+
+    function cloneJson(value) {
+      return JSON.parse(JSON.stringify(value));
+    }
+
+    function loadJson(key, fallback) {
+      const stored = localStorage.getItem(key);
+      if (!stored) {
+        localStorage.setItem(key, JSON.stringify(fallback));
+        return cloneJson(fallback);
+      }
+      try {
+        const parsed = JSON.parse(stored);
+        return Array.isArray(parsed) ? parsed : cloneJson(fallback);
+      } catch {
+        return cloneJson(fallback);
+      }
+    }
+
+    function normalizeArtwork(art) {
+      return {
+        ...art,
+        artistId: art.artistId || "artist-1",
+        image: art.image || "",
+        available: art.available !== false,
+        tags: Array.isArray(art.tags) ? art.tags : []
+      };
+    }
+
+    function loadData() {
+      state.artworks = loadJson(ARTWORKS_KEY, seedArtworks).map(normalizeArtwork);
+      state.artistProfiles = loadJson(PROFILES_KEY, seedProfiles).map(profile => ({
+        ...profile,
+        styles: splitList(profile.styles)
+      }));
+      saveArtworks();
+      saveProfiles();
+    }
+
+    function saveArtworks() {
+      localStorage.setItem(ARTWORKS_KEY, JSON.stringify(state.artworks));
+    }
+
+    function saveProfiles() {
+      localStorage.setItem(PROFILES_KEY, JSON.stringify(state.artistProfiles));
+    }
+
+    function getArtistProfile(artistId) {
+      const user = users.find(item => item.id === artistId);
+      const profile = state.artistProfiles.find(item => item.userId === artistId);
+      if (profile) return { ...profile, styles: splitList(profile.styles) };
+      return {
+        userId: artistId,
+        displayName: user?.name || "Artista Mapscife",
+        photo: "",
+        bio: "Perfil em construção. O grafiteiro ainda não completou sua apresentação pública.",
+        styles: ["Arte urbana"],
+        instagram: "",
+        whatsapp: "",
+        email: user?.email || "",
+        otherLinks: "",
+        cityRegion: "Recife"
+      };
+    }
+
+    function upsertProfile(profile) {
+      const normalized = { ...profile, styles: splitList(profile.styles) };
+      const exists = state.artistProfiles.some(item => item.userId === normalized.userId);
+      state.artistProfiles = exists
+        ? state.artistProfiles.map(item => item.userId === normalized.userId ? normalized : item)
+        : [...state.artistProfiles, normalized];
+      saveProfiles();
+    }
+
+    function showToast(message) {
+      const toast = $("toast");
+      toast.textContent = message;
+      toast.classList.add("show");
+      window.setTimeout(() => toast.classList.remove("show"), 2300);
+    }
+
+    function artworkImage(art) {
+      if (art?.image) return `<img src="${art.image}" alt="Imagem da obra ${escapeHtml(art.title)}">`;
+      return "";
+    }
+
+    function profileImage(profile) {
+      if (profile?.photo) return `<img src="${profile.photo}" alt="Foto de ${escapeHtml(profile.displayName)}">`;
+      return "";
+    }
+
+    function initials(name) {
+      return String(name || "Artista").split(" ").map(part => part[0]).slice(0, 2).join("").toUpperCase();
+    }
+
+    function isClientLogged() {
+      return state.user?.role === "client";
+    }
+
+    function setScreen(screenName) {
+      $("loginScreen").classList.toggle("hidden", screenName !== "login");
+      $("clientScreen").classList.toggle("hidden", screenName !== "client");
+      $("artistScreen").classList.toggle("hidden", screenName !== "artist");
+      if (screenName === "client") window.setTimeout(() => state.clientMap && state.clientMap.invalidateSize(), 80);
+      if (screenName === "artist") window.setTimeout(() => state.artistMap && state.artistMap.invalidateSize(), 80);
+    }
+
+    function login(user) {
+      state.user = user;
+      sessionStorage.setItem(SESSION_KEY, JSON.stringify({ email: user.email }));
+      if (user.role === "client") {
+        setScreen("client");
+        initClientMap();
+        renderClient();
+      } else {
+        setScreen("artist");
+        initArtistMap();
+        renderArtist();
+      }
+    }
+
+    function logout() {
+      state.user = null;
+      sessionStorage.removeItem(SESSION_KEY);
+      setScreen("client");
+      initClientMap();
+      renderClient();
+      showToast("Você saiu. O mapa público continua disponível.");
+    }
+
+    function restoreSession() {
+      const raw = sessionStorage.getItem(SESSION_KEY);
+      if (!raw) return false;
+      try {
+        const { email } = JSON.parse(raw);
+        const user = users.find(item => item.email === email);
+        if (user) {
+          login(user);
+          return true;
+        }
+      } catch {
+        sessionStorage.removeItem(SESSION_KEY);
+      }
+      return false;
+    }
+
+    function tileLayer() {
+      return L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
+        maxZoom: 20,
+        attribution: "&copy; OpenStreetMap &copy; CARTO"
+      });
+    }
+
+    function createMuralIcon(art) {
+      return L.divIcon({
+        className: "",
+        html: `<div class="mural-marker ${art.available ? "available" : ""} ${art.id === state.selectedId ? "selected" : ""}"></div>`,
+        iconSize: [36, 36],
+        iconAnchor: [18, 34],
+        popupAnchor: [0, -30]
+      });
+    }
+
+    function initClientMap() {
+      if (state.clientMap) return;
+      state.clientMap = L.map("clientMap", {
+        zoomControl: true,
+        scrollWheelZoom: true,
+        maxBoundsViscosity: .25
+      });
+      tileLayer().addTo(state.clientMap);
+      state.clientMap.fitBounds(RECIFE_ANTIGO_BOUNDS);
+    }
+
+    function initArtistMap() {
+      if (state.artistMap) return;
+      state.artistMap = L.map("artistMap", {
+        zoomControl: true,
+        scrollWheelZoom: true
+      });
+      tileLayer().addTo(state.artistMap);
+      state.artistMap.fitBounds(RECIFE_ANTIGO_BOUNDS);
+      state.artistMap.on("click", event => setDraftLocation(event.latlng.lat, event.latlng.lng));
+    }
+
+    function filteredArtworks() {
+      const q = $("searchInput").value.trim().toLowerCase();
+      const style = $("styleFilter").value;
+      const region = $("regionFilter").value;
+      return state.artworks.filter(art => {
+        const profile = getArtistProfile(art.artistId);
+        const text = [
+          art.title, art.description, art.style, art.region, art.location,
+          profile.displayName, profile.instagram, ...(art.tags || []), ...(profile.styles || [])
+        ].join(" ").toLowerCase();
+        return (!q || text.includes(q)) &&
+          (style === "all" || art.style === style) &&
+          (region === "all" || art.region === region);
+      });
+    }
+
+    function renderFilterOptions() {
+      const styles = [...new Set(state.artworks.map(art => art.style))].sort();
+      const regions = [...new Set(state.artworks.map(art => art.region))].sort();
+      const currentStyle = $("styleFilter").value || "all";
+      const currentRegion = $("regionFilter").value || "all";
+      $("styleFilter").innerHTML = `<option value="all">Todos</option>` + styles.map(style => `<option>${escapeHtml(style)}</option>`).join("");
+      $("regionFilter").innerHTML = `<option value="all">Todas</option>` + regions.map(region => `<option>${escapeHtml(region)}</option>`).join("");
+      $("styleFilter").value = styles.includes(currentStyle) ? currentStyle : "all";
+      $("regionFilter").value = regions.includes(currentRegion) ? currentRegion : "all";
+    }
+
+    function renderClientHeader() {
+      const label = $("clientUserLabel");
+      if (isClientLogged()) {
+        label.textContent = state.user.name;
+        label.classList.remove("visitor");
+        $("clientLogin").classList.add("hidden");
+        $("clientLogout").classList.remove("hidden");
+      } else {
+        label.textContent = "Visitante";
+        label.classList.add("visitor");
+        $("clientLogin").classList.remove("hidden");
+        $("clientLogout").classList.add("hidden");
+      }
+    }
+
+    function renderClient() {
+      renderClientHeader();
+      renderFilterOptions();
+      const items = filteredArtworks();
+      if (!state.selectedId || !items.some(art => art.id === state.selectedId)) {
+        state.selectedId = items[0]?.id || state.artworks[0]?.id || null;
+      }
+      renderStats(items);
+      renderArtList(items);
+      renderClientMarkers(items);
+      renderDetail(state.artworks.find(art => art.id === state.selectedId));
+      window.setTimeout(() => state.clientMap && state.clientMap.invalidateSize(), 40);
+    }
+
+    function renderStats(items) {
+      $("statArts").textContent = items.length;
+      $("statArtists").textContent = new Set(items.map(art => art.artistId)).size;
+      $("statHire").textContent = items.filter(art => art.available).length;
+    }
+
+    function renderArtList(items) {
+      $("artList").innerHTML = items.map(art => {
+        const profile = getArtistProfile(art.artistId);
+        return `
+          <article class="art-card ${art.id === state.selectedId ? "active" : ""}" data-id="${art.id}" tabindex="0">
+            <div class="art-thumb">${artworkImage(art)}</div>
+            <div class="art-copy">
+              <h3>${escapeHtml(art.title)}</h3>
+              <p>${escapeHtml(profile.displayName)}<br>${escapeHtml(art.location)}</p>
+              <div class="tags"><span class="tag">${escapeHtml(art.style)}</span><span class="tag">${escapeHtml(art.region)}</span></div>
+            </div>
+          </article>
+        `;
+      }).join("") || `<div class="empty-state">Nenhuma obra encontrada com esses filtros. Limpe a busca ou cadastre uma nova arte no ambiente do grafiteiro.</div>`;
+
+      document.querySelectorAll(".art-card").forEach(card => {
+        card.addEventListener("click", () => selectArtwork(card.dataset.id, true));
+        card.addEventListener("keydown", event => {
+          if (event.key === "Enter") selectArtwork(card.dataset.id, true);
+        });
+      });
+    }
+
+    function renderClientMarkers(items) {
+      if (!state.clientMap) return;
+      state.clientMarkers.forEach(marker => marker.remove());
+      state.clientMarkers.clear();
+      items.forEach(art => {
+        const profile = getArtistProfile(art.artistId);
+        const marker = L.marker([art.lat, art.lng], { icon: createMuralIcon(art) })
+          .addTo(state.clientMap)
+          .bindPopup(`<strong>${escapeHtml(art.title)}</strong><br>${escapeHtml(profile.displayName)} - ${escapeHtml(art.style)}`);
+        marker.on("click", () => selectArtwork(art.id, false));
+        state.clientMarkers.set(art.id, marker);
+      });
+    }
+
+    function selectArtwork(id, flyTo) {
+      state.selectedId = id;
+      const art = state.artworks.find(item => item.id === id);
+      renderClient();
+      if (art && flyTo && state.clientMap) state.clientMap.flyTo([art.lat, art.lng], 17, { duration: .75 });
+    }
+
+    function renderDetail(art) {
+      if (!art) {
+        $("detailPanel").innerHTML = `<section class="detail-body"><div class="empty-state">Selecione uma obra no mapa ou na lista para visualizar imagem, estilo, descrição e localização.</div></section>`;
+        return;
+      }
+      const profile = getArtistProfile(art.artistId);
+      const privateHint = isClientLogged()
+        ? `${escapeHtml(profile.instagram || "Instagram não informado")} - contatos disponíveis`
+        : "Perfil completo e contatos disponíveis após login";
+
+      $("detailPanel").innerHTML = `
+        <section class="detail-hero">
+          <div class="detail-photo">${artworkImage(art)}</div>
+          <h2>${escapeHtml(art.title)}</h2>
+          <p>${escapeHtml(art.location)}<br>${Number(art.lat).toFixed(5)}, ${Number(art.lng).toFixed(5)}</p>
+          <div class="artist-row">
+            <div class="avatar">${profile.photo ? `<img src="${profile.photo}" alt="Foto de ${escapeHtml(profile.displayName)}">` : escapeHtml(initials(profile.displayName))}</div>
+            <div>
+              <strong>${escapeHtml(profile.displayName)}</strong>
+              <span>${privateHint}</span>
+            </div>
+          </div>
+        </section>
+        <section class="detail-body">
+          <div class="info-grid">
+            <div class="info-box"><span>Estilo</span><b>${escapeHtml(art.style)}</b></div>
+            <div class="info-box"><span>Região</span><b>${escapeHtml(art.region)}</b></div>
+            <div class="info-box"><span>Avaliação futura</span><b>${escapeHtml(art.rating || "Novo")}/5.0</b></div>
+            <div class="info-box"><span>Status</span><b>${art.available ? "Aberto a propostas" : "Agenda indisponível"}</b></div>
+          </div>
+          <div class="story-card">
+            <h3>Descrição da obra</h3>
+            <p>${escapeHtml(art.description)}</p>
+            <div class="tags">${(art.tags || []).map(tag => `<span class="tag">${escapeHtml(tag)}</span>`).join("")}<span class="tag">${escapeHtml(art.style)}</span></div>
+          </div>
+          <div class="story-card">
+            <h3>${isClientLogged() ? "Perfil e contratação" : "Acesso do visitante"}</h3>
+            <p>${isClientLogged() ? "Abra o perfil completo para ver contatos, redes, bio e outras obras do grafiteiro." : "Você está explorando como visitante. Para ver contatos diretos e perfil completo do grafiteiro, faça login como cliente."}</p>
+            <div class="button-row">
+              <button class="primary-btn" type="button" id="openArtistProfile">Ver perfil do grafiteiro</button>
+              <button class="secondary-btn" type="button" id="contactArtist">${art.available ? "Conversar / contratar" : "Salvar contato"}</button>
+            </div>
+          </div>
+        </section>
+      `;
+      $("openArtistProfile").addEventListener("click", () => guardedProfileOpen(art.artistId));
+      $("contactArtist").addEventListener("click", () => guardedProfileOpen(art.artistId));
+    }
+
+    function guardedProfileOpen(artistId) {
+      if (!isClientLogged()) {
+        openModal("authModal");
+        return;
+      }
+      openArtistProfile(artistId);
+    }
+
+    function openArtistProfile(artistId) {
+      const profile = getArtistProfile(artistId);
+      const arts = state.artworks.filter(art => art.artistId === artistId);
+      $("profileModalTitle").textContent = profile.displayName;
+      $("profileModalBody").innerHTML = `
+        <div class="profile-modal-grid">
+          <div class="profile-modal-photo">${profileImage(profile)}</div>
+          <div>
+            <p class="helper">${escapeHtml(profile.bio)}</p>
+            <div class="tags">${profile.styles.map(style => `<span class="tag">${escapeHtml(style)}</span>`).join("")}</div>
+            <div class="contact-grid">
+              ${profile.instagram ? `<span class="contact-chip">Instagram: ${escapeHtml(profile.instagram)}</span>` : ""}
+              ${profile.whatsapp ? `<span class="contact-chip">WhatsApp: ${escapeHtml(profile.whatsapp)}</span>` : ""}
+              ${profile.email ? `<span class="contact-chip">E-mail: ${escapeHtml(profile.email)}</span>` : ""}
+              ${profile.otherLinks ? `<span class="contact-chip">${escapeHtml(profile.otherLinks)}</span>` : ""}
+              ${profile.cityRegion ? `<span class="contact-chip">Região: ${escapeHtml(profile.cityRegion)}</span>` : ""}
+            </div>
+          </div>
+        </div>
+        <div class="story-card">
+          <h3>Artes publicadas</h3>
+          <div class="modal-art-grid">
+            ${arts.map(art => `
+              <article class="modal-art-card">
+                <div class="art-thumb">${artworkImage(art)}</div>
+                <strong>${escapeHtml(art.title)}</strong>
+                <span class="tag">${escapeHtml(art.style)}</span>
+              </article>
+            `).join("") || `<div class="empty-state">Este grafiteiro ainda não publicou artes.</div>`}
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button class="primary-btn" type="button" id="modalChatBtn">Conversar</button>
+          <button class="secondary-btn" type="button" id="modalHireBtn">Contratar</button>
+          <button class="secondary-btn" type="button" id="modalEmailBtn">Enviar e-mail</button>
+        </div>
+      `;
+      openModal("profileModal");
+      $("modalChatBtn").addEventListener("click", () => showToast(`Conversa iniciada com ${profile.displayName}.`));
+      $("modalHireBtn").addEventListener("click", () => showToast(`Solicitação de contratação enviada para ${profile.displayName}.`));
+      $("modalEmailBtn").addEventListener("click", () => showToast(profile.email ? `E-mail preparado para ${profile.email}.` : "E-mail não cadastrado."));
+    }
+
+    function openModal(id) {
+      $(id).classList.add("open");
+    }
+
+    function closeModal(id) {
+      $(id).classList.remove("open");
+    }
+
+    function renderArtist() {
+      renderArtistHeader();
+      loadProfileForm();
+      renderArtistMarkers();
+      renderManageList();
+      window.setTimeout(() => state.artistMap && state.artistMap.invalidateSize(), 40);
+    }
+
+    function renderArtistHeader() {
+      const profile = getArtistProfile(state.user.id);
+      $("artistUserLabel").textContent = profile.displayName;
+      $("artistProfileAvatar").innerHTML = profile.photo
+        ? `<img src="${profile.photo}" alt="Foto de ${escapeHtml(profile.displayName)}">`
+        : escapeHtml(initials(profile.displayName));
+      $("artistProfileAvatar").setAttribute("title", `Editar perfil de ${profile.displayName}`);
+    }
+
+    function ownArtworks() {
+      return state.artworks.filter(art => art.artistId === state.user?.id);
+    }
+
+    function loadProfileForm() {
+      const profile = getArtistProfile(state.user.id);
+      $("profileNameInput").value = profile.displayName;
+      $("profileBioInput").value = profile.bio;
+      $("profileStylesInput").value = profile.styles.join(", ");
+      $("profileRegionInput").value = profile.cityRegion || "";
+      $("profileInstagramInput").value = profile.instagram || "";
+      $("profileWhatsappInput").value = profile.whatsapp || "";
+      $("profileEmailInput").value = profile.email || "";
+      $("profileOtherLinksInput").value = profile.otherLinks || "";
+      state.uploadedProfilePhoto = profile.photo || "";
+      if (state.uploadedProfilePhoto) {
+        $("profilePhotoPreview").src = state.uploadedProfilePhoto;
+        $("profilePhotoPreview").classList.remove("hidden");
+      } else {
+        $("profilePhotoPreview").classList.add("hidden");
+        $("profilePhotoPreview").removeAttribute("src");
+      }
+    }
+
+    function renderArtistMarkers() {
+      if (!state.artistMap) return;
+      state.artistMarkers.forEach(marker => marker.remove());
+      state.artistMarkers.clear();
+      ownArtworks().forEach(art => {
+        const marker = L.marker([art.lat, art.lng], { icon: createMuralIcon(art) })
+          .addTo(state.artistMap)
+          .bindPopup(`<strong>${escapeHtml(art.title)}</strong><br>${escapeHtml(art.location)}`);
+        marker.on("click", () => editArt(art.id));
+        state.artistMarkers.set(art.id, marker);
+      });
+    }
+
+    function renderManageList() {
+      const items = ownArtworks();
+      $("manageList").innerHTML = items.map(art => `
+        <article class="manage-card">
+          <div class="manage-photo">${artworkImage(art)}</div>
+          <h3>${escapeHtml(art.title)}</h3>
+          <p>${escapeHtml(art.style)} - ${escapeHtml(art.location)}</p>
+          <div class="manage-actions">
+            <button class="secondary-btn edit-art" type="button" data-id="${art.id}">Editar</button>
+            <button class="danger-btn delete-art" type="button" data-id="${art.id}">Excluir</button>
+          </div>
+        </article>
+      `).join("") || `<div class="empty-state">Você ainda não cadastrou obras. Clique no mapa, preencha o formulário e publique seu primeiro ponto.</div>`;
+
+      document.querySelectorAll(".edit-art").forEach(btn => btn.addEventListener("click", () => editArt(btn.dataset.id)));
+      document.querySelectorAll(".delete-art").forEach(btn => btn.addEventListener("click", () => deleteArt(btn.dataset.id)));
+    }
+
+    function setDraftLocation(lat, lng) {
+      $("latInput").value = Number(lat).toFixed(6);
+      $("lngInput").value = Number(lng).toFixed(6);
+      if (!state.draftMarker) {
+        state.draftMarker = L.marker([lat, lng], {
+          draggable: true,
+          icon: L.divIcon({ className: "", html: `<div class="mural-marker selected"></div>`, iconSize: [36, 36], iconAnchor: [18, 34] })
+        }).addTo(state.artistMap);
+        state.draftMarker.on("dragend", event => {
+          const point = event.target.getLatLng();
+          setDraftLocation(point.lat, point.lng);
+        });
+      } else {
+        state.draftMarker.setLatLng([lat, lng]);
+      }
+    }
+
+    function clearForm() {
+      $("artForm").reset();
+      $("editingArtId").value = "";
+      $("formTitle").textContent = "Nova obra";
+      $("imagePreview").classList.add("hidden");
+      $("imagePreview").removeAttribute("src");
+      state.uploadedImage = "";
+      if (state.draftMarker) {
+        state.draftMarker.remove();
+        state.draftMarker = null;
+      }
+    }
+
+    function editArt(id) {
+      const art = state.artworks.find(item => item.id === id);
+      if (!art) return;
+      $("formTitle").textContent = "Editar obra";
+      $("editingArtId").value = art.id;
+      $("titleInput").value = art.title;
+      $("descriptionInput").value = art.description;
+      $("styleInput").value = art.style;
+      $("regionInput").value = art.region;
+      $("locationInput").value = art.location;
+      state.uploadedImage = art.image || "";
+      if (state.uploadedImage) {
+        $("imagePreview").src = state.uploadedImage;
+        $("imagePreview").classList.remove("hidden");
+      } else {
+        $("imagePreview").classList.add("hidden");
+        $("imagePreview").removeAttribute("src");
+      }
+      setDraftLocation(art.lat, art.lng);
+      state.artistMap.flyTo([art.lat, art.lng], 17, { duration: .6 });
+    }
+
+    function deleteArt(id) {
+      const art = state.artworks.find(item => item.id === id);
+      if (!art) return;
+      const ok = window.confirm(`Excluir "${art.title}" do mapa?`);
+      if (!ok) return;
+      state.artworks = state.artworks.filter(item => item.id !== id);
+      saveArtworks();
+      if ($("editingArtId").value === id) clearForm();
+      renderArtist();
+      showToast("Arte excluída do protótipo.");
+    }
+
+    function handleArtSubmit(event) {
+      event.preventDefault();
+      const title = $("titleInput").value.trim();
+      const description = $("descriptionInput").value.trim();
+      const location = $("locationInput").value.trim();
+      if (!title || !description || !location) {
+        showToast("Preencha título, descrição e localização.");
+        return;
+      }
+      if (!$("latInput").value || !$("lngInput").value) {
+        showToast("Clique no mapa para marcar a localização da arte.");
+        return;
+      }
+      const editingId = $("editingArtId").value;
+      const base = {
+        title,
+        description,
+        style: $("styleInput").value,
+        region: $("regionInput").value,
+        location,
+        lat: Number($("latInput").value),
+        lng: Number($("lngInput").value),
+        artistId: state.user.id,
+        image: state.uploadedImage,
+        available: true,
+        rating: editingId ? (state.artworks.find(art => art.id === editingId)?.rating || "Novo") : "Novo",
+        tags: [$("styleInput").value.toLowerCase(), $("regionInput").value.toLowerCase()]
+      };
+
+      if (editingId) {
+        state.artworks = state.artworks.map(art => art.id === editingId ? { ...art, ...base, id: editingId } : art);
+        showToast("Arte atualizada no mapa.");
+      } else {
+        state.artworks.push({ ...base, id: `art-${Date.now()}` });
+        showToast("Arte publicada no ambiente do cliente.");
+      }
+      saveArtworks();
+      clearForm();
+      renderArtist();
+    }
+
+    function handleProfileSubmit(event) {
+      event.preventDefault();
+      const displayName = $("profileNameInput").value.trim();
+      const bio = $("profileBioInput").value.trim();
+      const styles = splitList($("profileStylesInput").value);
+      if (!displayName || !bio || !styles.length) {
+        showToast("Preencha nome artístico, bio e ao menos um estilo.");
+        return;
+      }
+      upsertProfile({
+        userId: state.user.id,
+        displayName,
+        photo: state.uploadedProfilePhoto,
+        bio,
+        styles,
+        instagram: $("profileInstagramInput").value.trim(),
+        whatsapp: $("profileWhatsappInput").value.trim(),
+        email: $("profileEmailInput").value.trim(),
+        otherLinks: $("profileOtherLinksInput").value.trim(),
+        cityRegion: $("profileRegionInput").value.trim()
+      });
+      closeModal("editProfileModal");
+      showToast("Perfil público atualizado.");
+      renderArtist();
+    }
+
+    function readImageFile(input, callback) {
+      const file = input.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => callback(reader.result);
+      reader.readAsDataURL(file);
+    }
+
+    function openLogin() {
+      closeModal("authModal");
+      setScreen("login");
+      window.setTimeout(() => $("email").focus(), 80);
+    }
+
+    function bindEvents() {
+      $("loginForm").addEventListener("submit", event => {
+        event.preventDefault();
+        const email = $("email").value.trim().toLowerCase();
+        const password = $("password").value;
+        const user = users.find(item => item.email === email && item.password === password);
+        if (!user) {
+          $("loginError").textContent = "Credenciais inválidas para o protótipo.";
+          return;
+        }
+        $("loginError").textContent = "";
+        login(user);
+      });
+
+      document.querySelectorAll(".demo-chip").forEach(btn => {
+        btn.addEventListener("click", () => {
+          $("email").value = btn.dataset.email;
+          $("password").value = "123456";
+        });
+      });
+
+      document.querySelectorAll("[data-close-modal]").forEach(btn => {
+        btn.addEventListener("click", () => closeModal(btn.dataset.closeModal));
+      });
+
+      $("authModal").addEventListener("click", event => {
+        if (event.target === $("authModal")) closeModal("authModal");
+      });
+      $("profileModal").addEventListener("click", event => {
+        if (event.target === $("profileModal")) closeModal("profileModal");
+      });
+      $("editProfileModal").addEventListener("click", event => {
+        if (event.target === $("editProfileModal")) closeModal("editProfileModal");
+      });
+
+      $("authLoginBtn").addEventListener("click", openLogin);
+      $("clientLogin").addEventListener("click", openLogin);
+      $("backToMap").addEventListener("click", () => {
+        setScreen("client");
+        initClientMap();
+        renderClient();
+      });
+      $("clientLogout").addEventListener("click", logout);
+      $("artistLogout").addEventListener("click", logout);
+      $("artistProfileAvatar").addEventListener("click", () => {
+        loadProfileForm();
+        openModal("editProfileModal");
+      });
+      $("resetClientMap").addEventListener("click", () => {
+        state.clientMap.fitBounds(RECIFE_ANTIGO_BOUNDS);
+        showToast("Mapa focado no Recife Antigo.");
+      });
+      $("centerArtistMap").addEventListener("click", () => {
+        state.artistMap.fitBounds(RECIFE_ANTIGO_BOUNDS);
+        showToast("Mapa centralizado no Recife Antigo.");
+      });
+
+      ["searchInput", "styleFilter", "regionFilter"].forEach(id => $(id).addEventListener("input", renderClient));
+      $("artForm").addEventListener("submit", handleArtSubmit);
+      $("profileForm").addEventListener("submit", handleProfileSubmit);
+      $("clearForm").addEventListener("click", clearForm);
+      $("imageInput").addEventListener("change", event => {
+        readImageFile(event.target, result => {
+          state.uploadedImage = result;
+          $("imagePreview").src = result;
+          $("imagePreview").classList.remove("hidden");
+        });
+      });
+      $("profilePhotoInput").addEventListener("change", event => {
+        readImageFile(event.target, result => {
+          state.uploadedProfilePhoto = result;
+          $("profilePhotoPreview").src = result;
+          $("profilePhotoPreview").classList.remove("hidden");
+        });
+      });
+    }
+
+    function boot() {
+      loadData();
+      state.selectedId = state.artworks[0]?.id || null;
+      bindEvents();
+      const restored = restoreSession();
+      if (!restored) {
+        setScreen("client");
+        initClientMap();
+        renderClient();
+      }
+    }
+
+    boot();
+  </script>
+</body>
+</html>
