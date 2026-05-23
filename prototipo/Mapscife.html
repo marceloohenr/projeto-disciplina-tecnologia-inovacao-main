@@ -25,6 +25,17 @@
       --green: #7be58e;
       --danger: #ff6b7d;
       --shadow: 0 28px 80px rgba(0, 0, 0, .45);
+      --body-bg:
+        linear-gradient(135deg, rgba(255, 90, 54, .12), transparent 28%),
+        radial-gradient(circle at 76% 12%, rgba(34, 226, 200, .16), transparent 25%),
+        radial-gradient(circle at 28% 92%, rgba(255, 79, 163, .12), transparent 31%),
+        #090b10;
+      --header-bg: rgba(8, 10, 15, .78);
+      --login-form-bg: rgba(10, 12, 17, .78);
+      --modal-bg: rgba(18, 20, 29, .95);
+      --input-bg: rgba(255, 255, 255, .07);
+      --soft-bg: rgba(255, 255, 255, .045);
+      --button-soft-bg: rgba(255, 255, 255, .08);
       --radius-xl: 28px;
       --radius-lg: 20px;
       --radius-md: 14px;
@@ -37,12 +48,32 @@
     body {
       margin: 0;
       color: var(--ink);
-      background:
-        linear-gradient(135deg, rgba(255, 90, 54, .12), transparent 28%),
-        radial-gradient(circle at 76% 12%, rgba(34, 226, 200, .16), transparent 25%),
-        radial-gradient(circle at 28% 92%, rgba(255, 79, 163, .12), transparent 31%),
-        #090b10;
+      background: var(--body-bg);
       overflow-x: hidden;
+    }
+
+    body[data-theme="light"] {
+      --ink: #1d1b18;
+      --muted: #5f5a52;
+      --subtle: #766f65;
+      --night: #fffaf0;
+      --panel: rgba(255, 250, 240, .82);
+      --panel-strong: rgba(255, 250, 240, .97);
+      --line: rgba(34, 31, 25, .13);
+      --line-strong: rgba(34, 31, 25, .24);
+      --shadow: 0 24px 70px rgba(83, 61, 42, .18);
+      --body-bg:
+        linear-gradient(135deg, rgba(255, 90, 54, .12), transparent 30%),
+        radial-gradient(circle at 82% 8%, rgba(34, 226, 200, .18), transparent 27%),
+        radial-gradient(circle at 26% 94%, rgba(255, 209, 102, .22), transparent 32%),
+        #fff7ea;
+      --header-bg: rgba(255, 250, 240, .82);
+      --login-form-bg: rgba(255, 250, 240, .86);
+      --modal-bg: rgba(255, 250, 240, .98);
+      --input-bg: rgba(19, 17, 14, .055);
+      --soft-bg: rgba(19, 17, 14, .045);
+      --button-soft-bg: rgba(19, 17, 14, .065);
+      color-scheme: light;
     }
 
     body::before {
@@ -81,6 +112,23 @@
       border: 1px solid var(--line);
       box-shadow: var(--shadow);
       backdrop-filter: blur(22px);
+    }
+
+    .theme-toggle {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      z-index: 1700;
+      min-height: 44px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 0 14px;
+      cursor: pointer;
+      color: var(--ink);
+      background: var(--panel-strong);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(18px);
+      font-weight: 950;
     }
 
     .login-screen {
@@ -152,7 +200,7 @@
       flex-direction: column;
       justify-content: center;
       gap: 18px;
-      background: rgba(10, 12, 17, .78);
+      background: var(--login-form-bg);
     }
 
     .eyebrow {
@@ -197,7 +245,7 @@
       padding: 0 13px;
       outline: none;
       color: var(--ink);
-      background: rgba(255, 255, 255, .07);
+      background: var(--input-bg);
       transition: border-color .18s ease, box-shadow .18s ease, background .18s ease;
     }
 
@@ -232,14 +280,14 @@
 
     .secondary-btn {
       color: var(--ink);
-      background: rgba(255, 255, 255, .08);
+      background: var(--button-soft-bg);
       border: 1px solid var(--line);
     }
 
     .ghost-btn {
       min-height: 38px;
       color: var(--muted);
-      background: rgba(255, 255, 255, .05);
+      background: var(--soft-bg);
       border: 1px solid var(--line);
     }
 
@@ -294,7 +342,7 @@
       justify-content: space-between;
       gap: 16px;
       border-bottom: 1px solid var(--line);
-      background: rgba(8, 10, 15, .78);
+      background: var(--header-bg);
       backdrop-filter: blur(18px);
       z-index: 800;
     }
@@ -427,7 +475,7 @@
       border: 1px solid var(--line);
       border-radius: 16px;
       padding: 10px;
-      background: rgba(255,255,255,.045);
+      background: var(--soft-bg);
     }
 
     .stat-card b { display: block; font-size: 22px; line-height: 1; }
@@ -449,7 +497,7 @@
       padding: 9px;
       border: 1px solid var(--line);
       border-radius: var(--radius-lg);
-      background: rgba(255,255,255,.052);
+      background: var(--soft-bg);
       cursor: pointer;
       transition: transform .16s ease, border-color .16s ease, background .16s ease;
     }
@@ -687,7 +735,7 @@
     .info-box, .story-card {
       border: 1px solid var(--line);
       border-radius: var(--radius-lg);
-      background: rgba(255,255,255,.047);
+      background: var(--soft-bg);
       padding: 13px;
     }
 
@@ -723,7 +771,7 @@
       border: 1px dashed rgba(255,255,255,.22);
       border-radius: var(--radius-lg);
       color: var(--muted);
-      background: rgba(255,255,255,.035);
+      background: var(--soft-bg);
       line-height: 1.5;
       font-size: 13px;
     }
@@ -862,7 +910,7 @@
       max-height: min(860px, calc(100vh - 36px));
       overflow: auto;
       border-radius: 28px;
-      background: var(--panel-strong);
+      background: var(--modal-bg);
       border: 1px solid var(--line);
       box-shadow: var(--shadow);
     }
@@ -1009,6 +1057,8 @@
   </style>
 </head>
 <body>
+  <button class="theme-toggle" id="themeToggle" type="button" aria-label="Alternar tema">Tema claro</button>
+
   <main id="loginScreen" class="screen login-screen hidden">
     <section class="login-card glass" aria-label="Login do Mapscife">
       <div class="login-art">
@@ -1318,6 +1368,7 @@
     const ARTWORKS_KEY = "mapscife_artworks_v2";
     const PROFILES_KEY = "mapscife_artist_profiles_v1";
     const SESSION_KEY = "mapscife_session_v2";
+    const THEME_KEY = "mapscife_theme_v1";
 
     const users = [
       { id: "client-1", name: "Cliente Demo", email: "cliente@mapscife.com", password: "123456", role: "client" },
@@ -1437,11 +1488,14 @@
       selectedId: null,
       clientMap: null,
       artistMap: null,
+      clientTileLayer: null,
+      artistTileLayer: null,
       clientMarkers: new Map(),
       artistMarkers: new Map(),
       draftMarker: null,
       uploadedImage: "",
-      uploadedProfilePhoto: ""
+      uploadedProfilePhoto: "",
+      theme: "dark"
     };
 
     const $ = id => document.getElementById(id);
@@ -1537,6 +1591,25 @@
       window.setTimeout(() => toast.classList.remove("show"), 2300);
     }
 
+    function applyTheme(theme) {
+      state.theme = theme === "light" ? "light" : "dark";
+      document.body.dataset.theme = state.theme;
+      localStorage.setItem(THEME_KEY, state.theme);
+      $("themeToggle").textContent = state.theme === "light" ? "Tema escuro" : "Tema claro";
+      $("themeToggle").setAttribute("aria-label", `Alternar para tema ${state.theme === "light" ? "escuro" : "claro"}`);
+      refreshMapThemes();
+    }
+
+    function loadTheme() {
+      const saved = localStorage.getItem(THEME_KEY);
+      if (saved === "light" || saved === "dark") return saved;
+      return window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+    }
+
+    function toggleTheme() {
+      applyTheme(state.theme === "light" ? "dark" : "light");
+    }
+
     function artworkImage(art) {
       if (art?.image) return `<img src="${art.image}" alt="Imagem da obra ${escapeHtml(art.title)}">`;
       return "";
@@ -1603,10 +1676,24 @@
     }
 
     function tileLayer() {
-      return L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
+      const style = state.theme === "light" ? "light_all" : "dark_all";
+      return L.tileLayer(`https://{s}.basemaps.cartocdn.com/${style}/{z}/{x}/{y}{r}.png`, {
         maxZoom: 20,
         attribution: "&copy; OpenStreetMap &copy; CARTO"
       });
+    }
+
+    function setMapTileLayer(mapName) {
+      const map = state[mapName];
+      if (!map) return;
+      const layerKey = mapName === "clientMap" ? "clientTileLayer" : "artistTileLayer";
+      if (state[layerKey]) state[layerKey].remove();
+      state[layerKey] = tileLayer().addTo(map);
+    }
+
+    function refreshMapThemes() {
+      setMapTileLayer("clientMap");
+      setMapTileLayer("artistMap");
     }
 
     function createMuralIcon(art) {
@@ -1626,7 +1713,7 @@
         scrollWheelZoom: true,
         maxBoundsViscosity: .25
       });
-      tileLayer().addTo(state.clientMap);
+      setMapTileLayer("clientMap");
       state.clientMap.fitBounds(RECIFE_ANTIGO_BOUNDS);
     }
 
@@ -1636,7 +1723,7 @@
         zoomControl: true,
         scrollWheelZoom: true
       });
-      tileLayer().addTo(state.artistMap);
+      setMapTileLayer("artistMap");
       state.artistMap.fitBounds(RECIFE_ANTIGO_BOUNDS);
       state.artistMap.on("click", event => setDraftLocation(event.latlng.lat, event.latlng.lng));
     }
@@ -2108,6 +2195,7 @@
       });
 
       $("authLoginBtn").addEventListener("click", openLogin);
+      $("themeToggle").addEventListener("click", toggleTheme);
       $("clientLogin").addEventListener("click", openLogin);
       $("backToMap").addEventListener("click", () => {
         setScreen("client");
@@ -2150,6 +2238,7 @@
     }
 
     function boot() {
+      applyTheme(loadTheme());
       loadData();
       state.selectedId = state.artworks[0]?.id || null;
       bindEvents();
