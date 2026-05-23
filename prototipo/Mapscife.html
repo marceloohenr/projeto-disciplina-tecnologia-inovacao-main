@@ -36,6 +36,12 @@
       --input-bg: rgba(255, 255, 255, .07);
       --soft-bg: rgba(255, 255, 255, .045);
       --button-soft-bg: rgba(255, 255, 255, .08);
+      --map-overlay-bg: rgba(9, 11, 16, .66);
+      --leaflet-control-bg: rgba(13, 15, 21, .9);
+      --leaflet-popup-bg: rgba(16, 18, 25, .95);
+      --role-text: #cffff8;
+      --visitor-text: #fff0b8;
+      --contact-text: #d9fff8;
       --radius-xl: 28px;
       --radius-lg: 20px;
       --radius-md: 14px;
@@ -73,7 +79,20 @@
       --input-bg: rgba(19, 17, 14, .055);
       --soft-bg: rgba(19, 17, 14, .045);
       --button-soft-bg: rgba(19, 17, 14, .065);
+      --map-overlay-bg: rgba(255, 250, 240, .74);
+      --leaflet-control-bg: rgba(255, 250, 240, .96);
+      --leaflet-popup-bg: rgba(255, 250, 240, .98);
+      --role-text: #096b62;
+      --visitor-text: #755312;
+      --contact-text: #096b62;
       color-scheme: light;
+    }
+
+    body[data-theme="light"]::before {
+      opacity: .18;
+      background-image:
+        linear-gradient(90deg, rgba(31,27,22,.08) 1px, transparent 1px),
+        linear-gradient(rgba(31,27,22,.08) 1px, transparent 1px);
     }
 
     body::before {
@@ -115,10 +134,6 @@
     }
 
     .theme-toggle {
-      position: fixed;
-      right: 18px;
-      bottom: 18px;
-      z-index: 1700;
       min-height: 44px;
       border: 1px solid var(--line);
       border-radius: 999px;
@@ -126,9 +141,10 @@
       cursor: pointer;
       color: var(--ink);
       background: var(--panel-strong);
-      box-shadow: var(--shadow);
+      box-shadow: 0 12px 28px rgba(0,0,0,.16);
       backdrop-filter: blur(18px);
       font-weight: 950;
+      white-space: nowrap;
     }
 
     .login-screen {
@@ -388,7 +404,7 @@
     .role-pill {
       border: 1px solid rgba(34,226,200,.24);
       background: rgba(34,226,200,.1);
-      color: #cffff8;
+      color: var(--role-text);
       border-radius: 999px;
       padding: 9px 12px;
       font-size: 12px;
@@ -398,7 +414,7 @@
     .role-pill.visitor {
       border-color: rgba(255,209,102,.26);
       background: rgba(255,209,102,.1);
-      color: #fff0b8;
+      color: var(--visitor-text);
     }
 
     .artist-avatar-btn {
@@ -580,7 +596,7 @@
     .contact-chip {
       min-height: 32px;
       font-size: 12px;
-      color: #d9fff8;
+      color: var(--contact-text);
       border-color: rgba(34,226,200,.22);
       background: rgba(34,226,200,.08);
     }
@@ -608,7 +624,7 @@
       width: min(390px, calc(100% - 36px));
       border-radius: 20px;
       padding: 14px;
-      background: rgba(9, 11, 16, .66);
+      background: var(--map-overlay-bg);
       border: 1px solid var(--line);
       backdrop-filter: blur(18px);
       pointer-events: none;
@@ -618,14 +634,14 @@
     .map-overlay span, .artist-map-help span { display: block; color: var(--muted); font-size: 12px; line-height: 1.45; margin-top: 5px; }
 
     .leaflet-control-zoom a {
-      background: rgba(13,15,21,.9) !important;
+      background: var(--leaflet-control-bg) !important;
       color: var(--ink) !important;
       border-color: var(--line) !important;
     }
 
     .leaflet-popup-content-wrapper, .leaflet-popup-tip {
       color: var(--ink);
-      background: rgba(16,18,25,.95);
+      background: var(--leaflet-popup-bg);
       border: 1px solid var(--line);
       box-shadow: var(--shadow);
     }
@@ -1046,6 +1062,7 @@
       .header-actions { width: 100%; justify-content: stretch; }
       .header-actions > * { flex: 1 1 auto; text-align: center; }
       .header-actions .artist-avatar-btn { flex: 0 0 44px; }
+      .header-actions .theme-toggle { flex: 1 1 132px; }
       .client-layout, .artist-layout { padding: 10px; gap: 10px; }
       .filter-row, .stats, .info-grid, .button-row, .form-grid, .manage-actions, .manage-list, .modal-actions, .modal-art-grid { grid-template-columns: 1fr; }
       #clientMap, #artistMap { min-height: 520px; }
@@ -1057,8 +1074,6 @@
   </style>
 </head>
 <body>
-  <button class="theme-toggle" id="themeToggle" type="button" aria-label="Alternar tema">Tema claro</button>
-
   <main id="loginScreen" class="screen login-screen hidden">
     <section class="login-card glass" aria-label="Login do Mapscife">
       <div class="login-art">
@@ -1076,6 +1091,7 @@
           <h2>Entre e o sistema identifica seu ambiente</h2>
           <p class="helper">Use um dos acessos de demonstração. O redirecionamento para cliente ou grafiteiro acontece automaticamente após o login.</p>
         </div>
+        <button class="theme-toggle" type="button" aria-label="Alternar tema">Tema claro</button>
         <div class="field">
           <label for="email">E-mail</label>
           <input class="input" id="email" name="email" type="email" autocomplete="username" placeholder="cliente@mapscife.com" required>
@@ -1106,6 +1122,7 @@
       </div>
       <div class="header-actions">
         <span class="role-pill visitor" id="clientUserLabel">Visitante</span>
+        <button class="theme-toggle" type="button" aria-label="Alternar tema">Tema claro</button>
         <button class="ghost-btn" id="resetClientMap" type="button">Focar Recife Antigo</button>
         <button class="primary-btn" id="clientLogin" type="button">Entrar</button>
         <button class="secondary-btn hidden" id="clientLogout" type="button">Sair</button>
@@ -1173,6 +1190,7 @@
       <div class="header-actions">
         <button class="artist-avatar-btn" id="artistProfileAvatar" type="button" title="Editar perfil do grafiteiro">GF</button>
         <span class="role-pill" id="artistUserLabel">Grafiteiro</span>
+        <button class="theme-toggle" type="button" aria-label="Alternar tema">Tema claro</button>
         <button class="ghost-btn" id="centerArtistMap" type="button">Centralizar mapa</button>
         <button class="secondary-btn" id="artistLogout" type="button">Sair</button>
       </div>
@@ -1595,8 +1613,10 @@
       state.theme = theme === "light" ? "light" : "dark";
       document.body.dataset.theme = state.theme;
       localStorage.setItem(THEME_KEY, state.theme);
-      $("themeToggle").textContent = state.theme === "light" ? "Tema escuro" : "Tema claro";
-      $("themeToggle").setAttribute("aria-label", `Alternar para tema ${state.theme === "light" ? "escuro" : "claro"}`);
+      document.querySelectorAll(".theme-toggle").forEach(button => {
+        button.textContent = state.theme === "light" ? "Tema escuro" : "Tema claro";
+        button.setAttribute("aria-label", `Alternar para tema ${state.theme === "light" ? "escuro" : "claro"}`);
+      });
       refreshMapThemes();
     }
 
@@ -2195,7 +2215,9 @@
       });
 
       $("authLoginBtn").addEventListener("click", openLogin);
-      $("themeToggle").addEventListener("click", toggleTheme);
+      document.querySelectorAll(".theme-toggle").forEach(button => {
+        button.addEventListener("click", toggleTheme);
+      });
       $("clientLogin").addEventListener("click", openLogin);
       $("backToMap").addEventListener("click", () => {
         setScreen("client");
