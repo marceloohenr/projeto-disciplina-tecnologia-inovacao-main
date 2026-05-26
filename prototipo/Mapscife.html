@@ -2011,12 +2011,10 @@
             <div class="info-box"><span>Estilo</span><b>${escapeHtml(art.style)}</b></div>
             <div class="info-box"><span>Região</span><b>${escapeHtml(art.region)}</b></div>
             <div class="info-box"><span>Avaliação futura</span><b>${escapeHtml(art.rating || "Novo")}/5.0</b></div>
-            <div class="info-box"><span>Status</span><b>${art.available ? "Aberto a propostas" : "Agenda indisponível"}</b></div>
           </div>
           <div class="story-card">
             <h3>Descrição da obra</h3>
             <p>${escapeHtml(art.description)}</p>
-            <div class="tags">${(art.tags || []).map(tag => `<span class="tag">${escapeHtml(tag)}</span>`).join("")}<span class="tag">${escapeHtml(art.style)}</span></div>
           </div>
           <div class="story-card">
             <h3>${isClientLogged() ? "Perfil e contratação" : "Acesso do visitante"}</h3>
