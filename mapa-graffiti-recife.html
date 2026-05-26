@@ -1,0 +1,1689 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mapa Vivo do Graffiti Recife</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <style>
+    /* ============================================
+       MAPA VIVO DO GRAFFITI RECIFE
+       Estética: Cyber-Graffiti / Urban Atlas
+       Paleta: Neon Cyan + Verde Água + Dark Urban
+    ============================================ */
+    :root {
+      /* Paleta principal: dark urban + neon */
+      --bg:           #f4f0fb;
+      --bg-2:         #ede8f8;
+      --bg-3:         #e4ddf4;
+      --panel:        rgba(248, 245, 255, 0.93);
+      --panel-strong: #faf7ff;
+      --glass:        rgba(0,0,0,0.03);
+      --glass-hover:  rgba(0,0,0,0.05);
+
+      /* Neon primários */
+      --cyan:         #e8530a;
+      --cyan-dim:     rgba(232, 83, 10, 0.10);
+      --cyan-glow:    rgba(232, 83, 10, 0.22);
+      --green:        #7c3aed;
+      --green-dim:    rgba(124, 58, 237, 0.10);
+      --green-glow:   rgba(124, 58, 237, 0.22);
+      --orange:       #f59e0b;
+      --orange-dim:   rgba(245, 158, 11, 0.12);
+      --purple:       #5b21b6;
+
+      /* Verde acento: esmeralda urbano */
+      --verde:        #10b981;
+      --verde-dim:    rgba(16, 185, 129, 0.10);
+      --verde-glow:   rgba(16, 185, 129, 0.22);
+
+      /* Texto */
+      --text:         #1e0a30;
+      --text-2:       #6b5a8a;
+      --text-3:       #a898c8;
+
+      /* Bordas */
+      --line:         rgba(80,20,140,0.10);
+      --line-active:  rgba(232, 83, 10, 0.35);
+
+      /* Sombras */
+      --shadow:       0 20px 60px rgba(60,20,100,0.10), 0 4px 16px rgba(80,20,140,0.06);
+      --glow-cyan:    0 0 20px rgba(232,83,10,0.22), 0 0 40px rgba(232,83,10,0.08);
+      --glow-green:   0 0 20px rgba(124,58,237,0.20), 0 0 40px rgba(124,58,237,0.08);
+
+      --radius-xl:    28px;
+      --radius-lg:    20px;
+      --radius-md:    14px;
+
+      font-family: 'Syne', ui-sans-serif, system-ui, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      color: var(--text);
+      min-height: 100vh;
+      background: var(--bg);
+      /* Textura urbana sutil: padrão stencil em background */
+      background-image:
+        radial-gradient(circle at 15% 10%, rgba(232,83,10,0.08) 0%, transparent 40%),
+        radial-gradient(circle at 85% 85%, rgba(124,58,237,0.07) 0%, transparent 40%),
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Crect width='60' height='60' fill='none'/%3E%3Ccircle cx='30' cy='30' r='0.8' fill='rgba(0,0,0,0.018)'/%3E%3C/svg%3E");
+      overflow-x: hidden;
+    }
+
+    a { color: inherit; text-decoration: none; }
+    button, input, select, textarea { font: inherit; }
+
+    .app-shell {
+      width: min(1540px, calc(100% - 32px));
+      margin: 20px auto 32px;
+      display: grid;
+      grid-template-columns: 340px minmax(0, 1fr) 380px;
+      gap: 16px;
+      min-height: calc(100vh - 52px);
+    }
+
+    /* ---- PANEL BASE ---- */
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(24px);
+      overflow: hidden;
+      /* Linha neon no topo do painel: identidade graffiti */
+      position: relative;
+    }
+    .panel::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 10%; right: 10%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--cyan) 30%, var(--verde) 60%, var(--purple), transparent);
+      opacity: 0.45;
+      border-radius: 999px;
+    }
+
+    /* ---- SIDEBAR ---- */
+    .sidebar {
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    /* BRAND */
+    .brand {
+      padding: 24px 22px 18px;
+      border-bottom: 1px solid var(--line);
+      background: linear-gradient(160deg, rgba(232,83,10,0.06) 0%, rgba(124,58,237,0.04) 60%, transparent 100%);
+      position: relative;
+      overflow: hidden;
+    }
+    /* Spray texture decorativo */
+    .brand::after {
+      content: "";
+      position: absolute;
+      right: -20px; bottom: -20px;
+      width: 120px; height: 120px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(16,185,129,0.10) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .brand-kicker {
+      /* ALTERAÇÃO: kicker estilo painel de sinal urbano */
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+      color: var(--cyan);
+      font-family: 'Space Mono', monospace;
+      font-weight: 700;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      font-size: 10px;
+      padding: 5px 10px;
+      border: 1px solid rgba(232,83,10,0.3);
+      border-radius: 4px;
+      background: rgba(232,83,10,0.06);
+    }
+    .brand-kicker::before {
+      content: "";
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--cyan);
+      box-shadow: 0 0 8px var(--cyan);
+      animation: blink 1.8s ease-in-out infinite;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    .brand h1 {
+      margin: 12px 0 8px;
+      font-size: clamp(22px, 2.5vw, 32px);
+      line-height: .95;
+      letter-spacing: -.04em;
+      font-weight: 800;
+      color: #1e0a30;
+    }
+    .brand h1 span {
+      color: var(--cyan);
+    }
+
+    .brand p {
+      margin: 0;
+      color: var(--text-2);
+      line-height: 1.5;
+      font-size: 13px;
+    }
+
+    .data-note {
+      margin-top: 14px;
+      padding: 10px 12px;
+      border: 1px solid rgba(255, 107, 53, 0.2);
+      border-radius: 10px;
+      color: rgba(124,58,237,0.75);
+      background: rgba(255, 107, 53, 0.06);
+      font-size: 11px;
+      font-family: 'Space Mono', monospace;
+      line-height: 1.4;
+    }
+
+    /* FILTERS */
+    .filter-stack {
+      padding: 16px;
+      display: grid;
+      gap: 12px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .field label, .toggle-label {
+      display: block;
+      color: var(--text-3);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      font-family: 'Space Mono', monospace;
+      margin-bottom: 7px;
+    }
+
+    .input, .select {
+      width: 100%;
+      border: 1px solid var(--line);
+      background: var(--glass);
+      color: var(--text);
+      border-radius: var(--radius-md);
+      outline: none;
+      min-height: 42px;
+      padding: 0 14px;
+      transition: border-color .2s, box-shadow .2s;
+    }
+    .input::placeholder { color: var(--text-3); }
+    .select option { color: #111; background: #fff; }
+
+    .input:focus, .select:focus {
+      border-color: rgba(232,83,10,0.5);
+      box-shadow: 0 0 0 3px rgba(232,83,10,0.1);
+    }
+
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border: 1px solid var(--line);
+      background: var(--glass);
+      border-radius: var(--radius-md);
+      padding: 12px 14px;
+      gap: 12px;
+      transition: border-color .2s;
+    }
+    .toggle-row:has(input:checked) {
+      border-color: rgba(16,185,129,0.3);
+      background: var(--verde-dim);
+    }
+
+    .switch {
+      width: 46px;
+      height: 26px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.1);
+      position: relative;
+      cursor: pointer;
+      flex: 0 0 auto;
+    }
+    .switch input { display: none; }
+    .switch span {
+      position: absolute;
+      width: 20px; height: 20px;
+      left: 3px; top: 3px;
+      border-radius: 50%;
+      background: var(--text-2);
+      transition: .2s ease;
+    }
+    .switch input:checked + span { transform: translateX(20px); background: var(--verde); box-shadow: 0 0 8px var(--verde); }
+    .switch:has(input:checked) { background: rgba(16,185,129,0.18); }
+
+    /* STATS */
+    .stats {
+      padding: 14px 16px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      border-bottom: 1px solid var(--line);
+    }
+    .stat {
+      min-height: 64px;
+      border: 1px solid var(--line);
+      background: var(--glass);
+      border-radius: var(--radius-md);
+      padding: 10px;
+      transition: border-color .2s;
+    }
+    .stat:hover { border-color: rgba(232,83,10,0.2); }
+    .stat[style*="185,129"]:hover { border-color: rgba(16,185,129,0.5); }
+    .stat b { display: block; font-size: 22px; letter-spacing: -.04em; color: #1e0a30; font-weight: 800; }
+    .stat span { color: var(--text-3); font-size: 10px; line-height: 1.3; display: block; font-family: 'Space Mono', monospace; text-transform: uppercase; letter-spacing: .05em; }
+
+    /* LIST */
+    .list-header {
+      padding: 16px 16px 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+    .list-header h2 { margin: 0; font-size: 14px; font-weight: 700; color: var(--text-2); text-transform: uppercase; letter-spacing: .06em; font-family: 'Space Mono', monospace; }
+    .count-pill {
+      color: var(--cyan);
+      background: var(--cyan-dim);
+      border: 1px solid rgba(232,83,10,0.2);
+      border-radius: 999px;
+      padding: 5px 10px;
+      font-size: 11px;
+      font-weight: 700;
+      font-family: 'Space Mono', monospace;
+    }
+
+    .mural-list {
+      padding: 0 10px 16px;
+      display: grid;
+      gap: 8px;
+      overflow: auto;
+      min-height: 0;
+      max-height: 440px;
+    }
+    .mural-list::-webkit-scrollbar { width: 3px; }
+    .mural-list::-webkit-scrollbar-track { background: transparent; }
+    .mural-list::-webkit-scrollbar-thumb { background: var(--cyan-dim); border-radius: 999px; }
+
+    /* MURAL CARDS
+       ALTERAÇÃO: reflexo neon, microinterações, overlay artístico */
+    .mural-card {
+      border: 1px solid var(--line);
+      background: var(--glass);
+      border-radius: var(--radius-lg);
+      padding: 10px;
+      display: grid;
+      grid-template-columns: 70px 1fr;
+      gap: 10px;
+      cursor: pointer;
+      transition: transform .18s ease, border-color .18s ease, background .18s ease, box-shadow .18s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    /* Brilho em movimento ao hover */
+    .mural-card::after {
+      content: "";
+      position: absolute;
+      top: -50%; left: -60%;
+      width: 50%; height: 200%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.04), transparent);
+      transform: skewX(-20deg);
+      transition: left .5s ease;
+      pointer-events: none;
+    }
+    .mural-card:hover::after { left: 120%; }
+
+    .mural-card:hover, .mural-card.active {
+      transform: translateY(-2px);
+      border-color: rgba(232,83,10,0.25);
+      background: rgba(232,83,10,0.04);
+      box-shadow: 0 4px 20px rgba(232,83,10,0.08), inset 0 0 20px rgba(232,83,10,0.02);
+    }
+    .mural-card.active {
+      border-color: rgba(232,83,10,0.4);
+      box-shadow: var(--glow-cyan);
+    }
+
+    /* THUMBS */
+    .thumb, .detail-photo {
+      position: relative;
+      overflow: hidden;
+      border-radius: 12px;
+      background: #1a1d26;
+    }
+    .thumb { min-height: 70px; }
+
+    .art-a { background: linear-gradient(135deg, #ff4444 0%, #ff8c00 50%, #00e5b4 100%); }
+    .art-b { background: linear-gradient(135deg, #3b5bdb 0%, #7048e8 44%, #e64980 100%); }
+    .art-c { background: linear-gradient(135deg, #00b4d8 0%, #06d6a0 48%, #ffd166 100%); }
+    .art-d { background: linear-gradient(135deg, #e63946 0%, #c1121f 50%, #ffc300 100%); }
+    .art-e { background: linear-gradient(135deg, #06d6a0 0%, #00b4d8 45%, #4361ee 100%); }
+    .art-f { background: linear-gradient(135deg, #7209b7 0%, #a663cc 48%, #ff007f 100%); }
+
+    /* Overlay estilo stencil/graffiti nos thumbs */
+    .thumb::before, .detail-photo::before {
+      content: "";
+      position: absolute;
+      inset: -20%;
+      background:
+        repeating-linear-gradient(118deg, rgba(0,0,0,.3) 0 4px, transparent 4px 12px),
+        radial-gradient(circle at 30% 40%, rgba(255,255,255,.18), transparent 10%),
+        radial-gradient(circle at 70% 65%, rgba(255,255,255,.14), transparent 14%);
+      transform: rotate(-8deg);
+      mix-blend-mode: overlay;
+    }
+
+    .card-copy h3 { margin: 2px 0 4px; font-size: 13px; line-height: 1.2; font-weight: 800; color: #1e0a30; }
+    .card-copy p { margin: 0; color: var(--text-2); font-size: 11px; line-height: 1.4; }
+    .tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 7px; }
+    .tag {
+      font-size: 9px;
+      font-weight: 700;
+      color: #0d9669;
+      border: 1px solid rgba(16,185,129,0.25);
+      border-radius: 999px;
+      padding: 4px 8px;
+      background: rgba(16,185,129,0.07);
+      font-family: 'Space Mono', monospace;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+
+    /* ---- MAP PANEL ---- */
+    .map-panel {
+      position: relative;
+      display: grid;
+      grid-template-rows: auto minmax(520px, 1fr) auto;
+    }
+
+    /* TOPBAR
+       ALTERAÇÃO: área mais viva com coordenadas, sinal urbano, neon */
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      padding: 0;
+      border-bottom: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(232,83,10,0.04) 0%, transparent 100%);
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Textura urbana no topbar */
+    .topbar-left {
+      padding: 16px 20px;
+      flex: 1;
+    }
+
+    .topbar-signal {
+      font-family: 'Space Mono', monospace;
+      font-size: 9px;
+      letter-spacing: .15em;
+      text-transform: uppercase;
+      color: var(--cyan);
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .signal-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--cyan);
+      box-shadow: 0 0 8px var(--cyan), 0 0 16px var(--cyan);
+      animation: blink 1.4s ease-in-out infinite;
+      flex-shrink: 0;
+    }
+
+    .topbar-title {
+      font-size: 17px;
+      font-weight: 800;
+      color: #1e0a30;
+      letter-spacing: -.02em;
+      margin: 0 0 4px;
+    }
+
+    /* COORDENADAS DINÂMICAS
+       ALTERAÇÃO: painel de coordenadas animadas X/Y */
+    .coord-display {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      margin-top: 6px;
+    }
+    .coord-item {
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      color: var(--text-3);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .coord-item span {
+      color: var(--verde);
+      font-size: 11px;
+      font-weight: 700;
+      transition: all .4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      display: inline-block;
+    }
+    .coord-item b { color: var(--text-3); font-weight: 400; }
+
+    .target-area {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-family: 'Space Mono', monospace;
+      font-size: 9px;
+      color: var(--orange);
+      border: 1px solid rgba(124,58,237,0.2);
+      background: rgba(124,58,237,0.06);
+      border-radius: 4px;
+      padding: 3px 8px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      margin-top: 4px;
+      width: fit-content;
+    }
+    .target-area::before {
+      content: "⊕";
+      font-size: 10px;
+    }
+
+    .topbar-right {
+      padding: 16px 18px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    /* Scan line decorativa no topbar */
+    .topbar::after {
+      content: "";
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent 0%, var(--cyan) 30%, var(--green) 60%, transparent 100%);
+      opacity: 0.15;
+    }
+
+    /* SEGMENTED */
+    .segmented {
+      display: flex;
+      gap: 5px;
+      padding: 4px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--glass);
+    }
+    .segmented button {
+      border: 0;
+      color: var(--text-3);
+      background: transparent;
+      border-radius: 999px;
+      padding: 8px 12px;
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: 700;
+      font-family: 'Space Mono', monospace;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      transition: color .18s, background .18s;
+    }
+    .segmented button.active {
+      color: #fff;
+      background: var(--cyan);
+      box-shadow: 0 0 10px rgba(232,83,10,0.35);
+    }
+
+    /* MAP CANVAS
+       ALTERAÇÃO: overlays visuais, atmosfera neon, profundidade */
+    .map-canvas {
+      position: relative;
+      min-height: 520px;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 20% 30%, rgba(232,83,10,0.06) 0%, transparent 35%),
+        radial-gradient(circle at 78% 65%, rgba(124,58,237,0.05) 0%, transparent 30%),
+        radial-gradient(circle at 50% 50%, rgba(220,80,40,0.02) 0%, transparent 50%),
+        #f0eaf8;
+    }
+
+    /* Grid urbano */
+    .map-grid {
+      position: absolute;
+      inset: 0;
+      opacity: .35;
+      background-image:
+        linear-gradient(rgba(124,58,237,0.07) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(124,58,237,0.07) 1px, transparent 1px);
+      background-size: 52px 52px;
+    }
+
+    /* Overlay atmosférico: brilho neon nos cantos */
+    .map-overlay-top {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 80px;
+      background: linear-gradient(180deg, rgba(232,83,10,0.05) 0%, transparent 100%);
+      pointer-events: none;
+      z-index: 2;
+    }
+    .map-overlay-bottom {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 80px;
+      background: linear-gradient(0deg, rgba(16,185,129,0.05) 0%, transparent 100%);
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    /* Scan line animada sutil */
+    .map-scanline {
+      position: absolute;
+      left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, rgba(232,83,10,0.13), rgba(124,58,237,0.10), transparent);
+      animation: scanMove 8s linear infinite;
+      pointer-events: none;
+      z-index: 3;
+    }
+    @keyframes scanMove {
+      0% { top: -4px; }
+      100% { top: 100%; }
+    }
+
+    /* Rio Capibaribe */
+    .river {
+      position: absolute;
+      left: -10%; top: 14%;
+      width: 124%; height: 26%;
+      border-radius: 55% 45% 60% 40%;
+      background: linear-gradient(90deg, rgba(16,185,129,0.07), rgba(124,58,237,0.06), rgba(16,185,129,0.05));
+      transform: rotate(-13deg);
+      border: 1px solid rgba(16,185,129,0.14);
+    }
+    /* Brilho neon no rio */
+    .river::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background: linear-gradient(90deg, transparent 20%, rgba(16,185,129,0.14) 50%, transparent 80%);
+      animation: riverGlow 5s ease-in-out infinite alternate;
+    }
+    @keyframes riverGlow {
+      0% { opacity: 0.4; }
+      100% { opacity: 1; }
+    }
+
+    /* Costa */
+    .coast {
+      position: absolute;
+      top: -8%; right: -12%;
+      width: 34%; height: 116%;
+      background: linear-gradient(90deg, transparent, rgba(124,58,237,0.08));
+      clip-path: polygon(38% 0, 100% 0, 100% 100%, 22% 100%, 36% 77%, 25% 54%, 40% 32%);
+      border-left: 1px solid rgba(124,58,237,0.10);
+    }
+
+    /* Ruas */
+    .street {
+      position: absolute;
+      height: 1px;
+      background: rgba(0,0,0,0.07);
+      transform-origin: left center;
+    }
+    .street.s1 { width: 70%; left: 8%; top: 64%; transform: rotate(-23deg); }
+    .street.s2 { width: 56%; left: 20%; top: 28%; transform: rotate(12deg); }
+    .street.s3 { width: 44%; left: 24%; top: 78%; transform: rotate(9deg); }
+    .street.s4 { width: 60%; left: 14%; top: 50%; transform: rotate(35deg); }
+    .street.s5 { width: 42%; left: 54%; top: 20%; transform: rotate(83deg); }
+
+    /* Labels de área */
+    .area-label {
+      position: absolute;
+      color: rgba(60,20,100,0.28);
+      font-size: 10px;
+      font-weight: 700;
+      font-family: 'Space Mono', monospace;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      pointer-events: none;
+      text-shadow: 0 1px 0 rgba(255,255,255,0.9), 0 0 10px rgba(124,58,237,0.15);
+      z-index: 4;
+    }
+
+    /* PINS
+       ALTERAÇÃO: pulsação, glow neon, sinais vivos */
+    .pin {
+      --pin-color: var(--orange);
+      --pin-glow: rgba(232,83,10,0.45);
+      position: absolute;
+      width: 26px; height: 26px;
+      border: 0;
+      background: var(--pin-color);
+      border-radius: 50% 50% 50% 4px;
+      transform: translate(-50%, -100%) rotate(-45deg);
+      cursor: pointer;
+      box-shadow:
+        0 4px 12px rgba(0,0,0,0.5),
+        0 0 0 5px rgba(var(--pin-color), 0.08);
+      transition: transform .18s ease, box-shadow .18s ease;
+      z-index: 5;
+    }
+    .pin::before {
+      content: "";
+      position: absolute;
+      width: 8px; height: 8px;
+      inset: 9px;
+      background: rgba(255,255,255,0.9);
+      border-radius: 50%;
+    }
+    /* Pulso neon nos pins
+       ALTERAÇÃO: anel pulsante ao redor dos pins */
+    .pin::after {
+      content: "";
+      position: absolute;
+      inset: -6px;
+      border-radius: 50%;
+      border: 1px solid var(--pin-color);
+      opacity: 0;
+      animation: pinPulse 2.5s ease-out infinite;
+      transform: rotate(45deg);
+    }
+    @keyframes pinPulse {
+      0% { inset: -4px; opacity: 0.6; }
+      100% { inset: -14px; opacity: 0; }
+    }
+
+    .pin:hover, .pin.active {
+      transform: translate(-50%, -100%) rotate(-45deg) scale(1.2);
+      box-shadow:
+        0 8px 20px rgba(0,0,0,0.5),
+        0 0 20px var(--pin-glow),
+        0 0 40px rgba(232,83,10,0.1);
+      z-index: 6;
+    }
+    .pin.active {
+      animation: pinGlow 2s ease-in-out infinite alternate;
+    }
+    @keyframes pinGlow {
+      0% { box-shadow: 0 4px 12px rgba(0,0,0,0.12), 0 0 12px var(--pin-glow); }
+      100% { box-shadow: 0 4px 20px rgba(0,0,0,0.12), 0 0 28px var(--pin-glow), 0 0 50px rgba(232,83,10,0.2); }
+    }
+
+    .pin.filtered-out { opacity: .1; pointer-events: none; }
+
+    /* Tooltip */
+    .map-tooltip {
+      position: absolute;
+      width: 220px;
+      background: rgba(16, 19, 28, 0.97);
+      border: 1px solid rgba(124,58,237,0.2);
+      border-radius: 14px;
+      padding: 10px 12px;
+      box-shadow: 0 10px 30px rgba(60,20,100,0.10), 0 0 20px rgba(232,83,10,0.08);
+      transform: translate(-50%, -112%);
+      z-index: 8;
+      display: none;
+      pointer-events: none;
+      color: var(--text);
+    }
+    .map-tooltip.visible { display: block; }
+    .map-tooltip strong { display: block; font-size: 12px; margin-bottom: 3px; color: #1e0a30; }
+    .map-tooltip span { color: var(--text-2); font-size: 11px; font-family: 'Space Mono', monospace; }
+
+    /* Controles do mapa */
+    .map-actions {
+      position: absolute;
+      top: 16px; right: 16px;
+      display: grid;
+      gap: 6px;
+      z-index: 10;
+    }
+    .map-actions button {
+      width: 40px; height: 40px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: rgba(255,251,247,0.94);
+      color: var(--text-2);
+      cursor: pointer;
+      font-weight: 900;
+      font-family: 'Space Mono', monospace;
+      font-size: 14px;
+      backdrop-filter: blur(8px);
+      transition: border-color .18s, color .18s, box-shadow .18s;
+    }
+    .map-actions button:hover {
+      border-color: rgba(232,83,10,0.3);
+      color: var(--cyan);
+      box-shadow: 0 0 12px rgba(232,83,10,0.12);
+    }
+
+    /* Legenda */
+    .map-legend {
+      position: absolute;
+      left: 16px; bottom: 16px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      max-width: calc(100% - 32px);
+      z-index: 10;
+    }
+    .legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      color: var(--text-2);
+      font-size: 10px;
+      font-family: 'Space Mono', monospace;
+      border: 1px solid var(--line);
+      background: rgba(255,251,247,0.93);
+      border-radius: 999px;
+      padding: 6px 10px;
+      backdrop-filter: blur(8px);
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--orange); display: inline-block; box-shadow: 0 0 8px currentColor; }
+    .dot.hire { background: var(--verde); box-shadow: 0 0 6px rgba(16,185,129,0.5); }
+    .dot.event { background: var(--cyan); }
+
+    /* Map Footer */
+    .map-footer {
+      border-top: 1px solid var(--line);
+      padding: 12px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      color: var(--text-3);
+      font-size: 10px;
+      font-family: 'Space Mono', monospace;
+      background: rgba(0,0,0,0.02);
+      text-transform: uppercase;
+      letter-spacing: .05em;
+    }
+    .map-footer b { color: var(--cyan); }
+
+    /* ---- DETAIL PANEL ---- */
+    .detail-panel {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    .detail-hero {
+      padding: 16px;
+      border-bottom: 1px solid var(--line);
+      background: linear-gradient(160deg, rgba(232,83,10,0.04) 0%, rgba(124,58,237,0.03) 50%, transparent 100%);
+    }
+    .detail-photo {
+      min-height: 200px;
+      margin-bottom: 14px;
+      border-radius: 16px;
+    }
+    .detail-hero h2 {
+      margin: 0 0 5px;
+      font-size: 24px;
+      line-height: 1;
+      letter-spacing: -.04em;
+      color: #1e0a30;
+      font-weight: 800;
+    }
+    .detail-hero p { margin: 0; color: var(--text-2); font-size: 12px; font-family: 'Space Mono', monospace; }
+
+    .artist-row {
+      margin-top: 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .avatar {
+      width: 42px; height: 42px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, var(--orange), var(--purple));
+      display: grid;
+      place-items: center;
+      color: #fff;
+      font-weight: 800;
+      font-size: 13px;
+      border: 1px solid rgba(255,255,255,0.1);
+      box-shadow: 0 0 16px rgba(91,33,182,0.30);
+      flex-shrink: 0;
+    }
+    .artist-row strong { display: block; font-size: 13px; color: #1e0a30; }
+    .artist-row span { color: var(--text-2); font-size: 11px; font-family: 'Space Mono', monospace; }
+
+    .detail-body {
+      padding: 14px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .info-box {
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      background: var(--glass);
+      padding: 11px;
+      min-height: 66px;
+      transition: border-color .2s;
+    }
+    .info-box:hover { border-color: rgba(124,58,237,0.2); }
+    .info-box span {
+      display: block;
+      color: var(--text-3);
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      margin-bottom: 5px;
+      font-weight: 700;
+      font-family: 'Space Mono', monospace;
+    }
+    .info-box b { display: block; font-size: 13px; color: #1e0a30; }
+
+    .story-card, .contract-card {
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      background: var(--glass);
+      padding: 14px;
+    }
+    .story-card h3 {
+      margin: 0 0 8px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--verde);
+    }
+    .contract-card h3 {
+      margin: 0 0 8px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--cyan);
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      font-family: 'Space Mono', monospace;
+    }
+    .story-card p, .contract-card p {
+      margin: 0;
+      color: var(--text-2);
+      line-height: 1.55;
+      font-size: 12px;
+    }
+
+    /* Botões */
+    .primary-btn, .secondary-btn {
+      border: 0;
+      border-radius: var(--radius-md);
+      min-height: 44px;
+      padding: 0 16px;
+      cursor: pointer;
+      font-weight: 800;
+      letter-spacing: .01em;
+      font-family: 'Syne', sans-serif;
+      transition: transform .15s, box-shadow .15s;
+      font-size: 13px;
+    }
+    .primary-btn {
+      background: linear-gradient(135deg, var(--cyan), var(--green));
+      color: #000;
+      box-shadow: 0 4px 20px rgba(232,83,10,0.26);
+    }
+    .primary-btn:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 28px rgba(232,83,10,0.36);
+    }
+    .primary-btn:disabled {
+      opacity: .35;
+      cursor: not-allowed;
+      background: rgba(255,255,255,0.1);
+      color: var(--text-3);
+      box-shadow: none;
+    }
+    .secondary-btn {
+      background: var(--glass);
+      color: var(--text-2);
+      border: 1px solid var(--line);
+    }
+    .secondary-btn:hover {
+      border-color: rgba(124,58,237,0.2);
+      color: var(--text);
+    }
+    .button-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+
+    .route-card {
+      border: 1px solid rgba(16,185,129,0.18);
+      border-radius: var(--radius-lg);
+      padding: 14px;
+      background: linear-gradient(135deg, rgba(16,185,129,0.06), transparent);
+    }
+    .route-card strong { display: block; margin-bottom: 6px; font-size: 12px; color: var(--verde); font-family: 'Space Mono', monospace; text-transform: uppercase; letter-spacing: .06em; }
+    .route-card span { color: var(--text-2); font-size: 12px; line-height: 1.5; display: block; }
+
+    /* MODAL */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.75);
+      backdrop-filter: blur(14px);
+      display: none;
+      place-items: center;
+      z-index: 99;
+      padding: 18px;
+    }
+    .modal-backdrop.open { display: grid; }
+    .modal {
+      width: min(540px, 100%);
+      background: #faf7ff;
+      border: 1px solid rgba(124,58,237,0.15);
+      border-radius: 28px;
+      box-shadow: 0 20px 60px rgba(60,20,100,0.12), 0 0 40px rgba(124,58,237,0.06);
+      padding: 20px;
+      color: var(--text);
+    }
+    .modal header {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    .modal h2 {
+      margin: 0;
+      letter-spacing: -.04em;
+      color: #1e0a30;
+      font-size: 22px;
+    }
+    .close-btn {
+      width: 38px; height: 38px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      color: var(--text-2);
+      background: var(--glass);
+      cursor: pointer;
+      font-size: 14px;
+      transition: border-color .18s, color .18s;
+    }
+    .close-btn:hover {
+      border-color: rgba(232,83,10,0.3);
+      color: var(--cyan);
+    }
+    .modal form { display: grid; gap: 10px; }
+    textarea {
+      width: 100%;
+      min-height: 100px;
+      border: 1px solid var(--line);
+      background: var(--glass);
+      color: var(--text);
+      border-radius: var(--radius-md);
+      padding: 12px 14px;
+      resize: vertical;
+      outline: none;
+      transition: border-color .2s;
+    }
+    textarea::placeholder { color: var(--text-3); }
+    textarea:focus {
+      border-color: rgba(232,83,10,0.4);
+      box-shadow: 0 0 0 3px rgba(232,83,10,0.08);
+    }
+
+    /* TOAST */
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 24px;
+      transform: translateX(-50%) translateY(20px);
+      background: #1e0a30;
+      color: var(--cyan);
+      border: 1px solid rgba(232,83,10,0.35);
+      border-radius: 999px;
+      padding: 10px 18px;
+      box-shadow: 0 8px 30px rgba(60,20,100,0.20), 0 0 20px rgba(232,83,10,0.12);
+      z-index: 120;
+      opacity: 0;
+      pointer-events: none;
+      transition: .22s ease;
+      font-weight: 700;
+      font-size: 12px;
+      font-family: 'Space Mono', monospace;
+      letter-spacing: .05em;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* RESPONSIVE */
+    @media (max-width: 1240px) {
+      .app-shell { grid-template-columns: 300px minmax(0, 1fr); }
+      .detail-panel { grid-column: 1 / -1; display: grid; grid-template-columns: 380px 1fr; }
+      .detail-hero { border-bottom: 0; border-right: 1px solid var(--line); }
+    }
+    @media (max-width: 900px) {
+      .app-shell { width: min(100% - 20px, 660px); grid-template-columns: 1fr; }
+      .topbar { flex-direction: column; align-items: stretch; }
+      .detail-panel { display: block; }
+      .detail-hero { border-right: 0; border-bottom: 1px solid var(--line); }
+      .mural-list { max-height: none; }
+      .map-panel { grid-template-rows: auto minmax(440px, 1fr) auto; }
+    }
+    @media (max-width: 520px) {
+      .stats { grid-template-columns: 1fr; }
+      .button-row, .info-grid { grid-template-columns: 1fr; }
+      .segmented { overflow: auto; border-radius: 16px; }
+      .brand { padding: 20px 16px 14px; }
+      .filter-stack { padding: 14px; }
+      .map-footer { flex-direction: column; align-items: start; }
+      .coord-display { flex-wrap: wrap; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app-shell">
+    <!-- ============ SIDEBAR ============ -->
+    <aside class="panel sidebar">
+      <section class="brand">
+        <!-- ALTERAÇÃO: kicker estilo sinal urbano ativo -->
+        <div class="brand-kicker">Recife // Street Signal Online</div>
+        <h1>Mapa <span>Vivo</span><br>do Graffiti</h1>
+        <p>Cat&aacute;logo geolocalizado para descobrir murais, encontrar artistas e contratar autores para novas obras.</p>
+        <div class="data-note">// PROTÓTIPO: dados fictícios.<br>Substitua por cadastro real e coordenadas validadas.</div>
+      </section>
+
+      <section class="filter-stack" aria-label="Filtros do catálogo">
+        <div class="field">
+          <label for="search">Buscar obra, artista ou bairro</label>
+          <input class="input" id="search" placeholder="Ex.: Recife Antigo, lettering..." />
+        </div>
+        <div class="field">
+          <label for="region">Região</label>
+          <select class="select" id="region">
+            <option value="all">Todas as regiões</option>
+            <option value="Centro">Centro</option>
+            <option value="Zona Norte">Zona Norte</option>
+            <option value="Zona Sul">Zona Sul</option>
+            <option value="Zona Oeste">Zona Oeste</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="style">Filtro visual</label>
+          <select class="select" id="style">
+            <option value="all">Todos os estilos</option>
+            <option value="Lettering">Lettering</option>
+            <option value="Personagem">Personagem</option>
+            <option value="Mural social">Mural social</option>
+            <option value="Abstrato">Abstrato</option>
+          </select>
+        </div>
+        <div class="toggle-row">
+          <div>
+            <span class="toggle-label">Contratação</span>
+            <strong style="font-size:13px;color:var(--text)">Apenas artistas disponíveis</strong>
+          </div>
+          <label class="switch" aria-label="Filtrar artistas disponíveis">
+            <input type="checkbox" id="hireOnly" />
+            <span></span>
+          </label>
+        </div>
+      </section>
+
+      <section class="stats" aria-label="Resumo do catálogo">
+        <div class="stat"><b id="statWorks">8</b><span>obras</span></div>
+        <div class="stat"><b id="statArtists">8</b><span>artistas</span></div>
+        <div class="stat" style="border-color:rgba(16,185,129,0.3);background:rgba(16,185,129,0.04);"><b id="statHire" style="color:#0d9669;">6</b><span style="color:rgba(16,185,129,0.8);">disponíveis</span></div>
+      </section>
+
+      <div class="list-header">
+        <h2>Obras próximas</h2>
+        <span class="count-pill" id="resultCount">8 resultados</span>
+      </div>
+      <section class="mural-list" id="muralList" aria-label="Lista de obras"></section>
+    </aside>
+
+    <!-- ============ MAP PANEL ============ -->
+    <section class="panel map-panel">
+      <!-- ALTERAÇÃO: topbar com coordenadas dinâmicas e sinal urbano -->
+      <header class="topbar">
+        <div class="topbar-left">
+          <div class="topbar-signal">
+            <span class="signal-dot"></span>
+            Recife // Street Signal Online — Atlas Ativo
+          </div>
+          <div class="topbar-title">Descoberta por mapa</div>
+          <!-- Coordenadas dinâmicas que animam ao selecionar mural -->
+          <div class="coord-display">
+            <div class="coord-item">
+              <b>LAT</b>
+              <span id="coordLat">-8.063</span>
+            </div>
+            <div class="coord-item">
+              <b>LNG</b>
+              <span id="coordLng">-34.871</span>
+            </div>
+          </div>
+          <div class="target-area" id="targetArea">Centro — Recife Antigo</div>
+        </div>
+        <div class="topbar-right">
+          <nav class="segmented" aria-label="Modos de mapa">
+            <button class="active" type="button">Murais</button>
+            <button type="button">Artistas</button>
+            <button type="button">Roteiros</button>
+          </nav>
+        </div>
+      </header>
+
+      <div class="map-canvas" id="mapCanvas" aria-label="Mapa simulado de Recife">
+        <!-- Camadas visuais atmosféricas -->
+        <div class="map-grid"></div>
+        <div class="map-overlay-top"></div>
+        <div class="map-overlay-bottom"></div>
+        <div class="map-scanline"></div>
+
+        <!-- Elementos geográficos -->
+        <div class="river"></div>
+        <div class="coast"></div>
+        <div class="street s1"></div>
+        <div class="street s2"></div>
+        <div class="street s3"></div>
+        <div class="street s4"></div>
+        <div class="street s5"></div>
+
+        <span class="area-label" style="left: 58%; top: 20%;">Recife Antigo</span>
+        <span class="area-label" style="left: 63%; top: 58%;">Pina</span>
+        <span class="area-label" style="left: 72%; top: 78%;">Boa Viagem</span>
+        <span class="area-label" style="left: 24%; top: 28%;">Casa Amarela</span>
+        <span class="area-label" style="left: 18%; top: 74%;">Várzea</span>
+
+        <div class="map-actions" aria-label="Controles do mapa">
+          <button type="button" id="zoomIn">+</button>
+          <button type="button" id="zoomOut">−</button>
+          <button type="button" id="centerMap" title="Centralizar">⊕</button>
+        </div>
+
+        <div class="map-tooltip" id="tooltip"></div>
+
+        <div class="map-legend">
+          <span class="legend-item"><span class="dot"></span>obra visitável</span>
+          <span class="legend-item"><span class="dot hire"></span>autor disponível</span>
+          <span class="legend-item"><span class="dot event"></span>roteiro/evento</span>
+        </div>
+      </div>
+
+      <footer class="map-footer">
+        <span>Área: <b id="currentArea">Centro</b> — coordenadas aproximadas (protótipo)</span>
+        <span>Camadas: transporte · acessibilidade · editais · agenda</span>
+      </footer>
+    </section>
+
+    <!-- ============ DETAIL PANEL ============ -->
+    <aside class="panel detail-panel" id="detailPanel" aria-live="polite"></aside>
+  </main>
+
+  <!-- ============ MODAL ============ -->
+  <div class="modal-backdrop" id="modalBackdrop" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <section class="modal">
+      <header>
+        <div>
+          <h2 id="modalTitle">Solicitar orçamento</h2>
+          <p style="margin:6px 0 0;color:var(--text-2);font-size:12px;font-family:'Space Mono',monospace;">Briefing → proposta → contrato → obra.</p>
+        </div>
+        <button class="close-btn" type="button" id="closeModal">✕</button>
+      </header>
+      <form id="briefingForm">
+        <input class="input" name="name" placeholder="Seu nome ou organização" required />
+        <input class="input" name="contact" placeholder="WhatsApp ou e-mail" required />
+        <select class="select" name="projectType">
+          <option>Mural comercial</option>
+          <option>Oficina / ação educativa</option>
+          <option>Festival ou evento</option>
+          <option>Intervenção comunitária</option>
+        </select>
+        <textarea name="briefing" placeholder="Descreva o espaço, bairro, prazo e referências visuais."></textarea>
+        <button class="primary-btn" type="submit" style="width:100%">Enviar briefing para o artista</button>
+      </form>
+    </section>
+  </div>
+  <div class="toast" id="toast"></div>
+
+  <script>
+    /* ============================================================
+       DADOS — idênticos ao original
+    ============================================================ */
+    const murals = [
+      {
+        id: 1,
+        title: "Mangue em Movimento",
+        artist: "Nina Mar",
+        handle: "@ninamar.rec",
+        neighborhood: "Recife Antigo",
+        region: "Centro",
+        style: "Mural social",
+        status: "Disponivel para encomendas",
+        hire: true,
+        rating: "4.9",
+        coords: "-8.063, -34.871",
+        pos: { x: 62, y: 31 },
+        img: "art-a",
+        tags: ["manguebeat", "social", "fachada"],
+        story: "Mural inspirado nos rios, pontes e movimentos culturais da cidade. No produto final, esta área receberia fotos, ficha técnica e autorização de uso de imagem.",
+        budget: "R$ 3k – 8k"
+      },
+      {
+        id: 2,
+        title: "Letra de Maracatu",
+        artist: "Breno Spray",
+        handle: "@brenospray",
+        neighborhood: "Santo Amaro",
+        region: "Centro",
+        style: "Lettering",
+        status: "Disponivel para encomendas",
+        hire: true,
+        rating: "4.8",
+        coords: "-8.047, -34.879",
+        pos: { x: 54, y: 43 },
+        img: "art-b",
+        tags: ["lettering", "comercial", "tipografia"],
+        story: "Obra de lettering urbano que mistura caligrafia, movimento de alfaia e cores quentes. Ideal para vitrines, eventos e campanhas de marca.",
+        budget: "R$ 2k – 6k"
+      },
+      {
+        id: 3,
+        title: "Peixe Elétrico",
+        artist: "Lia Trafo",
+        handle: "@liatrafo",
+        neighborhood: "Pina",
+        region: "Zona Sul",
+        style: "Personagem",
+        status: "Agenda cheia",
+        hire: false,
+        rating: "4.7",
+        coords: "-8.090, -34.885",
+        pos: { x: 70, y: 59 },
+        img: "art-c",
+        tags: ["personagem", "praia", "cor"],
+        story: "Personagem fictício criado para dar identidade a uma lateral de edifício. O detalhe de produto pode exibir disponibilidade real e políticas de licença.",
+        budget: "Indisponível"
+      },
+      {
+        id: 4,
+        title: "Janela do Alto",
+        artist: "Raul Alto",
+        handle: "@raulalto",
+        neighborhood: "Casa Amarela",
+        region: "Zona Norte",
+        style: "Abstrato",
+        status: "Disponivel para encomendas",
+        hire: true,
+        rating: "4.6",
+        coords: "-8.026, -34.917",
+        pos: { x: 30, y: 33 },
+        img: "art-d",
+        tags: ["abstrato", "comunidade", "oficina"],
+        story: "Composição abstrata com blocos de cor e formas de janelas. Pode virar roteiro de bairro ou aula-oficina para jovens artistas.",
+        budget: "R$ 4k – 10k"
+      },
+      {
+        id: 5,
+        title: "Pontes de Tinta",
+        artist: "Coletivo Ponte",
+        handle: "@coletivoponte",
+        neighborhood: "Boa Vista",
+        region: "Centro",
+        style: "Mural social",
+        status: "Disponivel para editais",
+        hire: true,
+        rating: "4.9",
+        coords: "-8.057, -34.886",
+        pos: { x: 49, y: 50 },
+        img: "art-e",
+        tags: ["coletivo", "edital", "educacao"],
+        story: "Cadastro de coletivo com portfólio, histórico de editais e obras relacionadas no mapa. Bom para curadoria e contratação pública.",
+        budget: "Sob proposta"
+      },
+      {
+        id: 6,
+        title: "Azulejo Futuro",
+        artist: "Duda Pixel",
+        handle: "@dudapixel",
+        neighborhood: "Várzea",
+        region: "Zona Oeste",
+        style: "Abstrato",
+        status: "Disponivel para encomendas",
+        hire: true,
+        rating: "4.8",
+        coords: "-8.050, -34.953",
+        pos: { x: 22, y: 74 },
+        img: "art-f",
+        tags: ["padrao", "universidade", "azulejo"],
+        story: "Mural que cruza padrões de azulejo, pixels e memória urbana. A ficha pode incluir materiais usados, dimensões e manutenção.",
+        budget: "R$ 3k – 7k"
+      },
+      {
+        id: 7,
+        title: "Cortejo Neon",
+        artist: "Tuca Linha",
+        handle: "@tucalinha",
+        neighborhood: "Arruda",
+        region: "Zona Norte",
+        style: "Lettering",
+        status: "Agenda cheia",
+        hire: false,
+        rating: "4.5",
+        coords: "-8.022, -34.890",
+        pos: { x: 41, y: 24 },
+        img: "art-a",
+        tags: ["neon", "festival", "lettering"],
+        story: "Obra demo para mostrar busca por artistas sem agenda. No produto real, o usuário poderia seguir o artista e receber alerta de agenda aberta.",
+        budget: "Indisponível"
+      },
+      {
+        id: 8,
+        title: "Caranguejo Solar",
+        artist: "Miro Lata",
+        handle: "@mirolata",
+        neighborhood: "Boa Viagem",
+        region: "Zona Sul",
+        style: "Personagem",
+        status: "Disponivel para encomendas",
+        hire: true,
+        rating: "4.7",
+        coords: "-8.126, -34.900",
+        pos: { x: 78, y: 80 },
+        img: "art-b",
+        tags: ["personagem", "turismo", "loja"],
+        story: "Personagem de alto impacto para ponto turístico e fachada comercial. O CTA conecta contratante ao autor, sem apagar autoria da obra original.",
+        budget: "R$ 5k – 12k"
+      }
+    ];
+
+    let selectedId = murals[0].id;
+    let mapScale = 1;
+
+    const els = {
+      search:      document.getElementById("search"),
+      region:      document.getElementById("region"),
+      style:       document.getElementById("style"),
+      hireOnly:    document.getElementById("hireOnly"),
+      list:        document.getElementById("muralList"),
+      map:         document.getElementById("mapCanvas"),
+      detail:      document.getElementById("detailPanel"),
+      count:       document.getElementById("resultCount"),
+      statWorks:   document.getElementById("statWorks"),
+      statArtists: document.getElementById("statArtists"),
+      statHire:    document.getElementById("statHire"),
+      currentArea: document.getElementById("currentArea"),
+      tooltip:     document.getElementById("tooltip"),
+      modal:       document.getElementById("modalBackdrop"),
+      closeModal:  document.getElementById("closeModal"),
+      form:        document.getElementById("briefingForm"),
+      toast:       document.getElementById("toast"),
+      /* ALTERAÇÃO: novos elementos para coordenadas dinâmicas */
+      coordLat:    document.getElementById("coordLat"),
+      coordLng:    document.getElementById("coordLng"),
+      targetArea:  document.getElementById("targetArea"),
+    };
+
+    /* ============================================================
+       ALTERAÇÃO: animação de coordenadas — efeito de contagem
+       Ao selecionar um mural, os valores animam digit por digit
+    ============================================================ */
+    function animateCoord(el, targetVal) {
+      const duration = 500;
+      const steps = 18;
+      const stepTime = duration / steps;
+      let step = 0;
+      const interval = setInterval(() => {
+        step++;
+        if (step >= steps) {
+          el.textContent = targetVal;
+          clearInterval(interval);
+          return;
+        }
+        /* Gera valores intermediários com ruído decrescente */
+        const noise = (1 - step / steps) * 0.08;
+        const base = parseFloat(targetVal);
+        const rand = (base + (Math.random() - 0.5) * noise).toFixed(3);
+        el.textContent = rand;
+      }, stepTime);
+    }
+
+    function updateCoords(item) {
+      const [lat, lng] = item.coords.split(",").map(s => s.trim());
+      animateCoord(els.coordLat, lat);
+      animateCoord(els.coordLng, lng);
+      els.targetArea.textContent = `${item.region} — ${item.neighborhood}`;
+      els.currentArea.textContent = item.region;
+    }
+
+    /* ============================================================
+       FILTROS — idêntico ao original
+    ============================================================ */
+    function matchesFilters(item) {
+      const q = els.search.value.trim().toLowerCase();
+      const text = [item.title, item.artist, item.neighborhood, item.region, item.style, ...item.tags].join(" ").toLowerCase();
+      return (!q || text.includes(q)) &&
+        (els.region.value === "all" || item.region === els.region.value) &&
+        (els.style.value === "all" || item.style === els.style.value) &&
+        (!els.hireOnly.checked || item.hire);
+    }
+    function filteredMurals() { return murals.filter(matchesFilters); }
+
+    /* ============================================================
+       RENDERIZAÇÃO DA LISTA
+    ============================================================ */
+    function renderList(items) {
+      els.list.innerHTML = items.map(item => `
+        <article class="mural-card ${item.id === selectedId ? "active" : ""}" data-id="${item.id}" tabindex="0">
+          <div class="thumb ${item.img}" aria-hidden="true"></div>
+          <div class="card-copy">
+            <h3>${item.title}</h3>
+            <p>${item.artist} · ${item.neighborhood}<br><span style="color:var(--text-3);font-family:'Space Mono',monospace;font-size:10px;">${item.style} · ${item.status}</span></p>
+            <div class="tags">${item.tags.slice(0,3).map(tag => `<span class="tag">${tag}</span>`).join("")}</div>
+          </div>
+        </article>
+      `).join("") || `<p style="color:var(--text-3);padding:10px 8px;font-family:'Space Mono',monospace;font-size:12px;">// Nenhuma obra encontrada.</p>`;
+
+      els.list.querySelectorAll(".mural-card").forEach(card => {
+        card.addEventListener("click", () => selectMural(Number(card.dataset.id)));
+        card.addEventListener("keydown", e => {
+          if (e.key === "Enter") selectMural(Number(card.dataset.id));
+        });
+      });
+    }
+
+    /* ============================================================
+       PINS DO MAPA
+       ALTERAÇÃO: cores neon, css vars por pin, glow dinâmico
+    ============================================================ */
+    function renderPins(items) {
+      els.map.querySelectorAll(".pin").forEach(pin => pin.remove());
+      murals.forEach(item => {
+        const btn = document.createElement("button");
+        const isActive = item.id === selectedId;
+        const isVisible = items.includes(item);
+
+        btn.className = `pin ${isActive ? "active" : ""} ${isVisible ? "" : "filtered-out"}`;
+        btn.style.left = item.pos.x + "%";
+        btn.style.top = item.pos.y + "%";
+
+        /* ALTERAÇÃO: cores por tipo de artista */
+        if (item.hire) {
+          btn.style.setProperty("--pin-color", "var(--verde)");
+          btn.style.setProperty("--pin-glow", "rgba(16,185,129,0.55)");
+        } else {
+          btn.style.setProperty("--pin-color", "var(--orange)");
+          btn.style.setProperty("--pin-glow", "rgba(232,83,10,0.5)");
+        }
+
+        btn.setAttribute("aria-label", `${item.title}, ${item.neighborhood}`);
+        btn.addEventListener("click", () => selectMural(item.id));
+        btn.addEventListener("mouseenter", () => showTooltip(item));
+        btn.addEventListener("mouseleave", hideTooltip);
+        els.map.appendChild(btn);
+      });
+    }
+
+    function showTooltip(item) {
+      els.tooltip.innerHTML = `<strong>${item.title}</strong><span>${item.artist} · ${item.neighborhood}<br>${item.style} · ${item.status}</span>`;
+      els.tooltip.style.left = item.pos.x + "%";
+      els.tooltip.style.top = item.pos.y + "%";
+      els.tooltip.classList.add("visible");
+    }
+    function hideTooltip() { els.tooltip.classList.remove("visible"); }
+
+    /* ============================================================
+       ESTATÍSTICAS
+    ============================================================ */
+    function renderStats(items) {
+      const artistCount = new Set(items.map(i => i.artist)).size;
+      const hireCount = items.filter(i => i.hire).length;
+      els.count.textContent = `${items.length} resultado${items.length === 1 ? "" : "s"}`;
+      els.statWorks.textContent = items.length;
+      els.statArtists.textContent = artistCount;
+      els.statHire.textContent = hireCount;
+    }
+
+    /* ============================================================
+       PAINEL DE DETALHE
+    ============================================================ */
+    function renderDetail(item) {
+      els.detail.innerHTML = `
+        <section class="detail-hero">
+          <div class="detail-photo ${item.img}" aria-label="Imagem representativa da obra"></div>
+          <h2>${item.title}</h2>
+          <p>${item.neighborhood} · ${item.region} · ${item.coords}</p>
+          <div class="artist-row">
+            <div class="avatar">${item.artist.split(" ").map(p => p[0]).slice(0,2).join("")}</div>
+            <div><strong>${item.artist}</strong><span>${item.handle} · ${item.status}</span></div>
+          </div>
+        </section>
+        <section class="detail-body">
+          <div class="info-grid">
+            <div class="info-box"><span>Estilo</span><b>${item.style}</b></div>
+            <div class="info-box"><span>Avaliação</span><b>${item.rating}/5.0</b></div>
+            <div class="info-box"><span>Orçamento demo</span><b>${item.budget}</b></div>
+            <div class="info-box"><span>Uso sugerido</span><b>${item.hire ? "Contratar autor" : "Salvar referência"}</b></div>
+          </div>
+          <div class="story-card">
+            <h3>// História da obra</h3>
+            <p>${item.story}</p>
+            <div class="tags" style="margin-top:10px">${item.tags.map(tag => `<span class="tag">${tag}</span>`).join("")}</div>
+          </div>
+          <div class="contract-card">
+            <h3>// Contratação</h3>
+            <p>Fluxo: briefing → aceite → proposta → contrato → produção → registro final.</p>
+            <div class="button-row">
+              <button class="primary-btn" type="button" id="hireBtn" ${item.hire ? "" : "disabled"}>${item.hire ? "Contratar artista" : "Agenda indisponível"}</button>
+              <button class="secondary-btn" type="button" id="saveBtn">Salvar roteiro</button>
+            </div>
+          </div>
+          <div class="route-card">
+            <strong>// Roteiro sugerido</strong>
+            <span>Combine esta obra com outros pontos da mesma região para criar trilhas culturais, visitas guiadas e mapas para turistas.</span>
+          </div>
+        </section>
+      `;
+      const hireBtn = document.getElementById("hireBtn");
+      const saveBtn = document.getElementById("saveBtn");
+      if (hireBtn && item.hire) hireBtn.addEventListener("click", openModal);
+      if (saveBtn) saveBtn.addEventListener("click", () => showToast("// Roteiro salvo no protótipo."));
+    }
+
+    /* ============================================================
+       SELEÇÃO DE MURAL
+       ALTERAÇÃO: atualiza coordenadas com animação ao selecionar
+    ============================================================ */
+    function selectMural(id) {
+      selectedId = id;
+      const item = murals.find(m => m.id === id) || murals[0];
+      renderDetail(item);
+      updateCoords(item);   /* ALTERAÇÃO: anima coordenadas */
+      applyFilters(false);
+    }
+
+    function applyFilters(ensureSelection = true) {
+      const items = filteredMurals();
+      if (ensureSelection && items.length && !items.some(i => i.id === selectedId)) {
+        selectedId = items[0].id;
+        renderDetail(items[0]);
+        updateCoords(items[0]);
+      }
+      renderStats(items);
+      renderList(items);
+      renderPins(items);
+    }
+
+    /* ============================================================
+       MODAL E TOAST
+    ============================================================ */
+    function openModal() { els.modal.classList.add("open"); }
+    function closeModal() { els.modal.classList.remove("open"); }
+    function showToast(msg) {
+      els.toast.textContent = msg;
+      els.toast.classList.add("show");
+      window.setTimeout(() => els.toast.classList.remove("show"), 2400);
+    }
+
+    [els.search, els.region, els.style, els.hireOnly].forEach(el =>
+      el.addEventListener("input", () => applyFilters(true))
+    );
+    els.closeModal.addEventListener("click", closeModal);
+    els.modal.addEventListener("click", e => { if (e.target === els.modal) closeModal(); });
+    els.form.addEventListener("submit", e => {
+      e.preventDefault();
+      closeModal();
+      showToast("// Briefing enviado no protótipo.");
+      els.form.reset();
+    });
+
+    /* Controles do mapa */
+    document.getElementById("zoomIn").addEventListener("click", () => {
+      mapScale = Math.min(1.14, mapScale + .04);
+      els.map.style.transformOrigin = "center center";
+      els.map.style.transform = `scale(${mapScale})`;
+    });
+    document.getElementById("zoomOut").addEventListener("click", () => {
+      mapScale = Math.max(1, mapScale - .04);
+      els.map.style.transform = `scale(${mapScale})`;
+    });
+    document.getElementById("centerMap").addEventListener("click", () => {
+      mapScale = 1;
+      els.map.style.transform = "scale(1)";
+      showToast("// Mapa recentralizado.");
+    });
+
+    /* Segmented buttons */
+    document.querySelectorAll(".segmented button").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".segmented button").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+      });
+    });
+
+    /* INIT */
+    renderDetail(murals[0]);
+    updateCoords(murals[0]);
+    applyFilters(false);
+  </script>
+</body>
+</html>

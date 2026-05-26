@@ -7,7 +7,7 @@
   <link rel="icon" type="image/png" href="../assets/mapscife-logo.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Space+Mono:wght@400;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
     :root {
@@ -26,6 +26,8 @@
       --green: #7be58e;
       --danger: #ff6b7d;
       --shadow: 0 28px 80px rgba(0, 0, 0, .45);
+      --font-display: Syne, Inter, ui-sans-serif, system-ui, sans-serif;
+      --font-mono: "Space Mono", ui-monospace, SFMono-Regular, Consolas, monospace;
       --body-bg:
         linear-gradient(135deg, rgba(255, 90, 54, .12), transparent 28%),
         radial-gradient(circle at 76% 12%, rgba(34, 226, 200, .16), transparent 25%),
@@ -132,6 +134,21 @@
       border: 1px solid var(--line);
       box-shadow: var(--shadow);
       backdrop-filter: blur(22px);
+      position: relative;
+    }
+
+    .glass::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 10%;
+      right: 10%;
+      height: 1px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, transparent, var(--orange), var(--cyan), var(--pink), transparent);
+      opacity: .42;
+      pointer-events: none;
+      z-index: 1;
     }
 
     .theme-toggle {
@@ -232,6 +249,7 @@
       font-weight: 900;
       letter-spacing: .11em;
       text-transform: uppercase;
+      font-family: var(--font-mono);
     }
 
     .login-form h2,
@@ -240,6 +258,7 @@
       font-size: 28px;
       line-height: 1.05;
       letter-spacing: 0;
+      font-family: var(--font-display);
     }
 
     .helper {
@@ -258,6 +277,9 @@
       color: var(--muted);
       font-size: 12px;
       font-weight: 800;
+      font-family: var(--font-mono);
+      letter-spacing: .06em;
+      text-transform: uppercase;
     }
 
     .input, .select, textarea {
@@ -388,6 +410,7 @@
       margin: 0;
       font-size: 18px;
       letter-spacing: 0;
+      font-family: var(--font-display);
     }
 
     .header-brand span {
@@ -416,6 +439,7 @@
       padding: 9px 12px;
       font-size: 12px;
       font-weight: 900;
+      font-family: var(--font-mono);
     }
 
     .role-pill.visitor {
@@ -470,9 +494,23 @@
       padding: 20px;
       border-bottom: 1px solid var(--line);
       background: linear-gradient(135deg, rgba(255,90,54,.14), rgba(34,226,200,.05));
+      position: relative;
+      overflow: hidden;
     }
 
-    .panel-head h2 { margin: 8px 0 7px; font-size: 24px; line-height: 1; }
+    .panel-head::after {
+      content: "";
+      position: absolute;
+      right: -36px;
+      bottom: -42px;
+      width: 130px;
+      height: 130px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(34,226,200,.14), transparent 68%);
+      pointer-events: none;
+    }
+
+    .panel-head h2 { margin: 8px 0 7px; font-size: 24px; line-height: 1; font-family: var(--font-display); }
     .filters {
       padding: 14px;
       display: grid;
@@ -502,7 +540,7 @@
     }
 
     .stat-card b { display: block; font-size: 22px; line-height: 1; }
-    .stat-card span { display: block; color: var(--muted); font-size: 11px; margin-top: 5px; }
+    .stat-card span { display: block; color: var(--muted); font-size: 10px; margin-top: 5px; font-family: var(--font-mono); text-transform: uppercase; letter-spacing: .04em; }
 
     .art-list {
       min-height: 0;
@@ -523,12 +561,35 @@
       background: var(--soft-bg);
       cursor: pointer;
       transition: transform .16s ease, border-color .16s ease, background .16s ease;
+      position: relative;
+      overflow: hidden;
     }
+
+    .art-card::after {
+      content: "";
+      position: absolute;
+      top: -50%;
+      left: -65%;
+      width: 45%;
+      height: 200%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,.1), transparent);
+      transform: skewX(-20deg);
+      transition: left .55s ease;
+      pointer-events: none;
+    }
+
+    .art-card:hover::after { left: 120%; }
 
     .art-card:hover, .art-card.active {
       transform: translateY(-2px);
       border-color: rgba(255, 209, 102, .58);
       background: rgba(255, 209, 102, .08);
+      box-shadow: 0 12px 28px rgba(255,90,54,.1);
+    }
+
+    .art-card.active {
+      border-color: rgba(34,226,200,.48);
+      box-shadow: 0 0 22px rgba(34,226,200,.13), 0 12px 28px rgba(0,0,0,.18);
     }
 
     .art-thumb, .detail-photo, .manage-photo, .profile-photo, .profile-modal-photo {
@@ -571,6 +632,7 @@
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      font-family: var(--font-display);
     }
 
     .art-copy p {
@@ -598,6 +660,9 @@
       border: 1px solid rgba(255,255,255,.13);
       font-size: 10px;
       font-weight: 900;
+      font-family: var(--font-mono);
+      text-transform: uppercase;
+      letter-spacing: .04em;
     }
 
     .contact-chip {
@@ -639,6 +704,54 @@
 
     .map-overlay strong, .artist-map-help strong { display: block; font-size: 15px; }
     .map-overlay span, .artist-map-help span { display: block; color: var(--muted); font-size: 12px; line-height: 1.45; margin-top: 5px; }
+
+    .map-signal {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--orange);
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .11em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .map-signal::before {
+      content: "";
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--cyan);
+      box-shadow: 0 0 10px var(--cyan);
+      animation: blink 1.8s ease-in-out infinite;
+    }
+
+    .map-coords {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .coord-chip {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 6px 9px;
+      background: var(--soft-bg);
+      color: var(--muted);
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    .coord-chip b { color: var(--cyan); }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: .35; }
+    }
 
     .leaflet-control-zoom a {
       background: var(--leaflet-control-bg) !important;
@@ -703,6 +816,7 @@
       font-size: 28px;
       line-height: 1;
       letter-spacing: 0;
+      font-family: var(--font-display);
     }
 
     .detail-hero p, .detail-body p {
@@ -1175,8 +1289,14 @@
 
       <section class="map-wrap glass">
         <div class="map-overlay">
+          <div class="map-signal">Recife urban atlas</div>
           <strong>Recife Antigo em destaque</strong>
           <span>O mapa inicia centralizado na área foco do projeto, com pontos próximos ao Marco Zero, Cais do Sertão, Paço do Frevo e entorno portuário.</span>
+          <div class="map-coords" aria-label="Coordenadas da obra selecionada">
+            <span class="coord-chip">LAT <b id="coordLat">-8.06190</b></span>
+            <span class="coord-chip">LNG <b id="coordLng">-34.87080</b></span>
+            <span class="coord-chip">ÁREA <b id="coordArea">Recife Antigo</b></span>
+          </div>
         </div>
         <div id="clientMap" aria-label="Mapa de grafites no Recife"></div>
       </section>
@@ -1864,12 +1984,14 @@
     function renderDetail(art) {
       if (!art) {
         $("detailPanel").innerHTML = `<section class="detail-body"><div class="empty-state">Selecione uma obra no mapa ou na lista para visualizar imagem, estilo, descrição e localização.</div></section>`;
+        updateMapTelemetry(null);
         return;
       }
       const profile = getArtistProfile(art.artistId);
       const privateHint = isClientLogged()
         ? `${escapeHtml(profile.instagram || "Instagram não informado")} - contatos disponíveis`
         : "Perfil completo e contatos disponíveis após login";
+      updateMapTelemetry(art);
 
       $("detailPanel").innerHTML = `
         <section class="detail-hero">
@@ -1908,6 +2030,13 @@
       `;
       $("openArtistProfile").addEventListener("click", () => guardedProfileOpen(art.artistId));
       $("contactArtist").addEventListener("click", () => guardedProfileOpen(art.artistId));
+    }
+
+    function updateMapTelemetry(art) {
+      if (!$("coordLat") || !$("coordLng") || !$("coordArea")) return;
+      $("coordLat").textContent = art ? Number(art.lat).toFixed(5) : "-8.06190";
+      $("coordLng").textContent = art ? Number(art.lng).toFixed(5) : "-34.87080";
+      $("coordArea").textContent = art ? art.region : "Recife Antigo";
     }
 
     function guardedProfileOpen(artistId) {
