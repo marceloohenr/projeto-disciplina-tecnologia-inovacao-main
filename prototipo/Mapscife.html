@@ -3,7 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Mapscife - Plataforma de Graffiti Recife</title>
+  <title>MAPPITTI - Plataforma de Graffiti Recife</title>
+  <link rel="icon" type="image/png" href="../assets/mapscife-logo.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
@@ -183,15 +184,21 @@
     }
 
     .brand-mark {
-      width: 58px;
-      height: 58px;
-      border-radius: 18px;
-      display: grid;
-      place-items: center;
-      color: #12100d;
-      font-weight: 950;
-      background: linear-gradient(135deg, var(--yellow), var(--cyan));
-      box-shadow: 0 0 34px rgba(34, 226, 200, .34);
+      width: 68px;
+      height: 68px;
+      border-radius: 20px;
+      display: block;
+      object-fit: contain;
+      padding: 7px;
+      background: rgba(255, 255, 255, .9);
+      border: 1px solid rgba(255, 255, 255, .38);
+      box-shadow: 0 0 34px rgba(34, 226, 200, .34), 0 16px 34px rgba(0,0,0,.22);
+    }
+
+    body[data-theme="light"] .brand-mark {
+      background: rgba(255, 255, 255, .96);
+      border-color: rgba(29, 27, 24, .12);
+      box-shadow: 0 16px 34px rgba(83, 61, 42, .16);
     }
 
     .login-art h1 {
@@ -371,9 +378,9 @@
     }
 
     .header-brand .brand-mark {
-      width: 44px;
-      height: 44px;
-      border-radius: 15px;
+      width: 50px;
+      height: 50px;
+      border-radius: 16px;
       flex: 0 0 auto;
     }
 
@@ -1075,12 +1082,12 @@
 </head>
 <body>
   <main id="loginScreen" class="screen login-screen hidden">
-    <section class="login-card glass" aria-label="Login do Mapscife">
+    <section class="login-card glass" aria-label="Login do MAPPITTI">
       <div class="login-art">
-        <div class="brand-mark">MS</div>
+        <img class="brand-mark" src="../assets/mapscife-logo.png" alt="Logo MAPPITTI">
         <div>
           <span class="eyebrow">Recife Antigo como ponto de partida</span>
-          <h1>Mapscife</h1>
+          <h1>MAPPITTI</h1>
           <p>Mapa vivo para descobrir grafites, valorizar artistas urbanos e transformar muros do Recife em uma galeria cultural interativa.</p>
         </div>
       </div>
@@ -1114,9 +1121,9 @@
   <section id="clientScreen" class="screen workspace">
     <header class="app-header">
       <div class="header-brand">
-        <div class="brand-mark">MS</div>
+        <img class="brand-mark" src="../assets/mapscife-logo.png" alt="Logo MAPPITTI">
         <div>
-          <h1>Mapscife Cliente</h1>
+          <h1>MAPPITTI Cliente</h1>
           <span>Mapa interativo, galeria urbana e descoberta cultural em Recife.</span>
         </div>
       </div>
@@ -1181,9 +1188,9 @@
   <section id="artistScreen" class="screen workspace hidden">
     <header class="app-header">
       <div class="header-brand">
-        <div class="brand-mark">MS</div>
+        <img class="brand-mark" src="../assets/mapscife-logo.png" alt="Logo MAPPITTI">
         <div>
-          <h1>Mapscife Grafiteiro</h1>
+          <h1>MAPPITTI Grafiteiro</h1>
           <span>Gerencie seu perfil público, contatos e artes no mapa do Recife.</span>
         </div>
       </div>
@@ -1581,7 +1588,7 @@
       if (profile) return { ...profile, styles: splitList(profile.styles) };
       return {
         userId: artistId,
-        displayName: user?.name || "Artista Mapscife",
+        displayName: user?.name || "Artista MAPPITTI",
         photo: "",
         bio: "Perfil em construção. O grafiteiro ainda não completou sua apresentação pública.",
         styles: ["Arte urbana"],
